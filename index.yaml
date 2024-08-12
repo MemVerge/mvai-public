@@ -1,0 +1,16 @@
+apiVersion: v1
+entries:
+  kueue:
+  - apiVersion: v2
+    appVersion: v0.8.0
+    created: "2024-08-12T19:51:00.181441765Z"
+    description: Kueue is a set of APIs and controller for job queueing. It is a job-level
+      manager that decides when a job should be admitted to start (as in pods can
+      be created) and when it should stop (as in active pods should be deleted).
+    digest: 971a1d10c2373bdc9f385711491e81be6a71004de099072b212864885b2b22be
+    name: kueue
+    type: application
+    urls:
+    - https://memverge.github.io/mmc.ai-setup/kueue-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-08-12T19:51:00.165561076Z"
