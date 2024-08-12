@@ -3,7 +3,7 @@ entries:
   kueue:
   - apiVersion: v2
     appVersion: v0.8.0
-    created: "2024-08-12T19:51:00.181441765Z"
+    created: "2024-08-12T20:06:04.884353894Z"
     description: Kueue is a set of APIs and controller for job queueing. It is a job-level
       manager that decides when a job should be admitted to start (as in pods can
       be created) and when it should stop (as in active pods should be deleted).
@@ -13,4 +13,42 @@ entries:
     urls:
     - https://memverge.github.io/mmc.ai-setup/kueue-0.1.0.tgz
     version: 0.1.0
-generated: "2024-08-12T19:51:00.165561076Z"
+  mmcai-manager:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2024-08-12T20:06:04.899037768Z"
+    dependencies:
+    - name: ingress-nginx
+      repository: https://kubernetes.github.io/ingress-nginx
+      version: 4.11.1
+    description: Install the mmc.ai platform management center
+    digest: 9dd1b3cd7027510a72132d1797c60fa77b6eea41d0f085f64c3de1d48b5be09a
+    name: mmcai-manager
+    type: application
+    urls:
+    - https://memverge.github.io/mmc.ai-setup/mmcai-manager-0.1.0.tgz
+    version: 0.1.0
+  mmcai-system:
+  - apiVersion: v2
+    appVersion: 0.1.0
+    created: "2024-08-12T20:06:05.014534991Z"
+    dependencies:
+    - condition: gpu-operator.enabled
+      name: gpu-operator
+      repository: https://helm.ngc.nvidia.com/nvidia
+      version: v24.3.0
+    - condition: kube-prometheus-stack.enabled
+      name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 60.4.0
+    - name: kueue
+      repository: https://memverge.github.io/mmc.ai-setup
+      version: 0.1.0
+    description: Install the mmc.ai platform
+    digest: ec75c018cd6f7f9c57c3eb89319bd05ef9cfd4d9d9d6c950ef26cfc5e6295ba7
+    name: mmcai-system
+    type: application
+    urls:
+    - https://memverge.github.io/mmc.ai-setup/mmcai-system-0.1.0.tgz
+    version: 0.1.0
+generated: "2024-08-12T20:06:04.868839526Z"
