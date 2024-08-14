@@ -105,7 +105,7 @@ chmod 777 nvidia-gpu-operator-setup.sh
 
 ## Installing MMC.AI
 
-> [!Important]
+> **Important:**
 > The following prerequisites are necessary if you did not follow the instructions above:
 > 1. Kubernetes set up.
 > 2. [Default StorageClass](https://kubernetes.io/docs/concepts/storage/storage-classes/#default-storageclass) set up in cluster.
@@ -124,7 +124,7 @@ kubectl apply -f mmcai-ghcr-secret.yaml
 
 #### Billing Database
 Download and run `mysql-pre-setup.sh` on the node used for the billing database:
-> [!Tip]
+> **Tip:**
 > `mysql-pre-setup.sh` will manually prompt for the hostname of the current node.
 
 ```bash
@@ -135,7 +135,7 @@ chmod 777 mysql-pre-setup.sh
 ```
 
 
-#### MMC.AI Cluster
+#### MMC.AI Cluster and Management Planes
 Download and run `mmcai-setup.sh` on the control plane node:
 
 ``` bash
@@ -144,17 +144,7 @@ chmod 777 mmcai-setup.sh
 ./mmcai-setup.sh
 ```
 
-### Management Center
-
-The management center will allow users to view the MMC.AI dashboard.
-Install it with the following helm invocation:
-
-```bash
-helm install -n <MANAGER_RELEASE_NAMESPACE> <MANAGER_RELEASE_NAME> https://memverge.github.io/mmc.ai-setup/mmcai-manager
-```
-
-Once deployed, the MMC.AI dashboard should be accessible at
-`http://<control-plane-ip>:32323`
+Once deployed, the MMC.AI dashboard should be accessible at `http://<control-plane-ip>:32323`.
 
 
 # MMC.AI Teardown Guide
@@ -165,17 +155,18 @@ Once deployed, the MMC.AI dashboard should be accessible at
 
 On the control plane node:
 ```bash
-helm uninstall -n <MANAGER_RELEASE_NAMESPACE> <MANAGER_RELEASE_NAME>
+helm uninstall -n mmcai-system mmcai-manager
 ```
 
 ### Cluster
 
-1. Remove CRDs and CRs:
-> [!Caution]
+Remove CRDs and CRs:
+> **Caution:**
 > Removal of CRDs cascades to all associated resources. Skip this step if you wish to keep custom resources.
-
-> [!Important]
+>
+> **Important:**
 > Manual intervention may be needed if custom resources associated with CRDs still exist and you have already uninstalled the controllers responsible for their finalizers.
+
 ```bash
 # MMC.AI
 kubectl delete crd departments.mmc.ai
@@ -204,36 +195,39 @@ kubectl delete crd servicemonitors.monitoring.coreos.com
 kubectl delete crd thanosrulers.monitoring.coreos.com
 ```
 
-2. Remove Helm installation:
+Remove Helm installation:
 ```
 helm uninstall -n <RELEASE_NAMESPACE> <RELEASE_NAME>
 ```
 
-3. Remove secrets:
+Remove secrets:
 ```
 kubectl delete secret -n <RELEASE_NAMESPACE> memverge-dockerconfig
 kubectl delete secret -n <MMCLOUD_OPERATOR_NAMESPACE> memverge-dockerconfig
 kubectl delete secret -n <RELEASE_NAMESPACE> mysql-secret
 ```
-4. Remove namespaces:
+
+Remove namespaces:
 ```
 kubectl delete namespace <RELEASE_NAMESPACE> 
 kubectl delete namespace <MMCLOUD_OPERATOR_NAMESPACE>
 kubectl delete namespace <PROMETHEUS_NAMESPACE>
 ```
-5. Remove billing database data:
+
+Remove billing database data:
 ```
 rm -rf /mnt/disks/mmai-mysql-billing
 ```
 
 ## Uninstalling NVIDIA GPU Operator
 
-1. Remove CRDs and CRs:
-> [!Caution]
+Remove CRDs and CRs:
+> **Caution:**
 > Removal of CRDs cascades to all associated resources. Skip this step if you wish to keep custom resources.
-
-> [!Important]
+>
+> **Important:**
 > Manual intervention may be needed if custom resources associated with CRDs still exist and you have already uninstalled the controllers responsible for their finalizers.
+
 ```bash
 # NVIDIA
 kubectl delete crd clusterpolicies.nvidia.com
@@ -243,12 +237,15 @@ kubectl delete crd nvidiadrivers.nvidia.com
 kubectl delete crd nodefeatures.nfd.k8s-sigs.io
 kubectl delete crd nodefeaturerules.nfd.k8s-sigs.io
 ```
-2. Remove Helm installation:
+
+Remove Helm installation:
+
 ```bash
 helm uninstall -n gpu-operator nvidia-gpu-operator
 ```
+
 ## Uninstalling Kubeflow
 
-> [!Important]TODO
-There is no way to uninstall/upgrade Kubeflow currently.
-Download and run `kubeflow-teardown.sh` on a node with kubectl and kustomize.
+> **Important:**
+> There is no way to uninstall/upgrade Kubeflow currently.
+> Download and run `kubeflow-teardown.sh` on a node with kubectl and kustomize.
