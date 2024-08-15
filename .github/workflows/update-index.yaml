@@ -1,0 +1,33 @@
+name: Update Helm Chart Repository Index
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - gh-pages
+    paths:
+      - '**.tgz'
+
+jobs:
+  update-index:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout self
+        uses: actions/checkout@v4
+
+      - name: install helm
+        uses: azure/setup-helm@v4.2.0
+
+      - name: generate index
+        run: helm repo index . --url https://memverge.github.io/mmc.ai-setup
+
+      - name: configure git
+        run: |-
+          git config --global user.name "MemVerge"
+          git config --global user.email "memverge@memverge.com"
+
+      - name: push index
+        run: |-
+          git add .
+          git commit -m "Update chart repository index"
+          git push
