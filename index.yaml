@@ -3,7 +3,7 @@ entries:
   kueue:
   - apiVersion: v2
     appVersion: v0.8.0
-    created: "2024-08-15T18:19:06.486566001Z"
+    created: "2024-08-15T20:29:23.794549824Z"
     description: Kueue is a set of APIs and controller for job queueing. It is a job-level
       manager that decides when a job should be admitted to start (as in pods can
       be created) and when it should stop (as in active pods should be deleted).
@@ -16,7 +16,7 @@ entries:
   mmcai-cluster:
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T18:19:06.515685492Z"
+    created: "2024-08-15T20:29:23.822592222Z"
     dependencies:
     - condition: kube-prometheus-stack.enabled
       name: kube-prometheus-stack
@@ -30,7 +30,7 @@ entries:
       repository: oci://registry-1.docker.io/bitnamicharts
       version: 11.1.15
     description: Install the mmc.ai platform
-    digest: 0f277e603a30c6cb29177ebf6255a92ed288cd4183b8a9c178b0a4fd29ac6b3b
+    digest: 954cb8a103d841288aef0d1d64d2aae03efe7e0a423e2349d0ce17030e00ad67
     name: mmcai-cluster
     type: application
     urls:
@@ -39,7 +39,7 @@ entries:
   mmcai-manager:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-08-15T18:19:06.520343187Z"
+    created: "2024-08-15T20:29:23.827152436Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -54,7 +54,7 @@ entries:
   mmcai-system:
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T18:19:06.552322183Z"
+    created: "2024-08-15T20:29:23.858851618Z"
     dependencies:
     - condition: gpu-operator.enabled
       name: gpu-operator
@@ -72,10 +72,10 @@ entries:
       repository: oci://registry-1.docker.io/bitnamicharts
       version: 11.1.15
     description: Install the mmc.ai platform
-    digest: 55f8eed33cf09ae2df0de47ec5330f027bac718194db324e791fc7be34805b10
+    digest: 726ee4b57c6bed60ce9a5e727ef0040c09a5b755e37ceaa3f84fa45c9e15d78e
     name: mmcai-system
     type: application
     urls:
     - https://memverge.github.io/mmc.ai-setup/mmcai-system-0.1.0.tgz
     version: 0.1.0
-generated: "2024-08-15T18:19:06.483125027Z"
+generated: "2024-08-15T20:29:23.791042911Z"
