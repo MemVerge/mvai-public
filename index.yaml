@@ -3,7 +3,7 @@ entries:
   kueue:
   - apiVersion: v2
     appVersion: v0.8.0
-    created: "2024-08-15T21:59:27.716411082Z"
+    created: "2024-08-15T23:02:02.975977316Z"
     description: Kueue is a set of APIs and controller for job queueing. It is a job-level
       manager that decides when a job should be admitted to start (as in pods can
       be created) and when it should stop (as in active pods should be deleted).
@@ -16,7 +16,7 @@ entries:
   mmcai-cluster:
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T21:59:27.804421378Z"
+    created: "2024-08-15T23:02:03.059837929Z"
     dependencies:
     - condition: kube-prometheus-stack.enabled
       name: kube-prometheus-stack
@@ -30,7 +30,7 @@ entries:
       repository: oci://registry-1.docker.io/bitnamicharts
       version: 11.1.15
     description: Install the mmc.ai platform
-    digest: ac5d74cf44a6ef28cbb318d5e15c9275a616f4c9d263c3baa84b5cc7b2998560
+    digest: 86359a2d47ea9f79758b965c9a9d8c693bd92e339444b47830dc486ac359cfd8
     name: mmcai-cluster
     type: application
     urls:
@@ -38,7 +38,7 @@ entries:
     version: 99.99.99
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T21:59:27.774681621Z"
+    created: "2024-08-15T23:02:03.032400817Z"
     dependencies:
     - condition: kube-prometheus-stack.enabled
       name: kube-prometheus-stack
@@ -60,7 +60,7 @@ entries:
     version: 0.1.0
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T21:59:27.745722857Z"
+    created: "2024-08-15T23:02:03.003815961Z"
     dependencies:
     - condition: kube-prometheus-stack.enabled
       name: kube-prometheus-stack
@@ -83,7 +83,7 @@ entries:
   mmcai-manager:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-08-15T21:59:27.808017289Z"
+    created: "2024-08-15T23:02:03.063377943Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -98,7 +98,7 @@ entries:
   mmcai-system:
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T21:59:27.841372426Z"
+    created: "2024-08-15T23:02:03.094340831Z"
     dependencies:
     - condition: gpu-operator.enabled
       name: gpu-operator
@@ -122,4 +122,4 @@ entries:
     urls:
     - https://memverge.github.io/mmc.ai-setup/mmcai-system-0.1.0.tgz
     version: 0.1.0
-generated: "2024-08-15T21:59:27.713265835Z"
+generated: "2024-08-15T23:02:02.972340021Z"
