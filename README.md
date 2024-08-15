@@ -100,6 +100,7 @@ chmod +x kubeflow-setup.sh
 Download and run `nvidia-gpu-operator-setup.sh` on the node used to manage Helm installations:
 ```bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O gpu-operator-values.yaml https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/gpu-operator-values.yaml
 wget -O nvidia-gpu-operator-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/nvidia-gpu-operator-setup.sh
 chmod +x nvidia-gpu-operator-setup.sh
 ./nvidia-gpu-operator-setup.sh
