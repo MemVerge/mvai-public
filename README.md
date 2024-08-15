@@ -80,9 +80,9 @@ Within there are four relevant headers:
 
 Once Ansible configuration is complete, copy these commands into your terminal to install Kubernetes and NVIDIA's NFS client provisioner:
 ```bash
-wget https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
-wget https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/deepops-setup.sh
-chmod 777 deepops-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O deepops-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/deepops-setup.sh
+chmod +x deepops-setup.sh
 ./deepops-setup.sh
 ```
 
@@ -90,16 +90,18 @@ chmod 777 deepops-setup.sh
 
 Download and run `kubeflow-setup.sh` on a node with kubectl and kustomize:
 ```bash
-wget https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/kubeflow-setup.sh
-chmod 777 kubeflow-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O kubeflow-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/kubeflow-setup.sh
+chmod +x kubeflow-setup.sh
 ./kubeflow-setup.sh
 ```
 ## Installing NVIDIA GPU Operator
 
 Download and run `nvidia-gpu-operator-setup.sh` on the node used to manage Helm installations:
 ```bash
-wget https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/nvidia-gpu-operator-setup.sh
-chmod 777 nvidia-gpu-operator-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O nvidia-gpu-operator-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/nvidia-gpu-operator-setup.sh
+chmod +x nvidia-gpu-operator-setup.sh
 ./nvidia-gpu-operator-setup.sh
 ```
 
@@ -128,8 +130,9 @@ Download and run `mysql-pre-setup.sh` on the node used for the billing database:
 > `mysql-pre-setup.sh` will manually prompt for the hostname of the current node.
 
 ```bash
-wget https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mysql-pre-setup.sh
-chmod 777 mysql-pre-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mysql-pre-setup.sh
+chmod +x mysql-pre-setup.sh
 ./mysql-pre-setup.sh
 # Answer prompts as needed.
 ```
@@ -139,8 +142,9 @@ chmod 777 mysql-pre-setup.sh
 Download and run `mmcai-setup.sh` on the control plane node:
 
 ``` bash
-wget https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mmcai-setup.sh
-chmod 777 mmcai-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O mmcai-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mmcai-setup.sh
+chmod +x mmcai-setup.sh
 ./mmcai-setup.sh
 ```
 
