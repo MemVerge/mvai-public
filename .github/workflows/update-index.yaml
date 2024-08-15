@@ -7,7 +7,6 @@ on:
       - gh-pages
     paths:
       - '**.tgz'
-  pull_request: # TODO: Remove before merging PR
 
 jobs:
   update-index:
@@ -15,8 +14,6 @@ jobs:
     steps:
       - name: checkout self
         uses: actions/checkout@v4
-        with: # TODO: Remove before merging PR
-          ref: gh-pages-update-index # TODO: Remove before merging PR
 
       - name: install helm
         uses: azure/setup-helm@v4.2.0
