@@ -3,26 +3,49 @@ entries:
   kueue:
   - apiVersion: v2
     appVersion: v0.8.0
-    created: "2024-08-12T20:06:04.884353894Z"
+    created: "2024-08-15T18:19:06.486566001Z"
     description: Kueue is a set of APIs and controller for job queueing. It is a job-level
       manager that decides when a job should be admitted to start (as in pods can
       be created) and when it should stop (as in active pods should be deleted).
-    digest: 971a1d10c2373bdc9f385711491e81be6a71004de099072b212864885b2b22be
+    digest: 6becb8097df858346ba8d90b63c15f3304d93f05bd6809afe94d6c9cb7e5b502
     name: kueue
     type: application
     urls:
     - https://memverge.github.io/mmc.ai-setup/kueue-0.1.0.tgz
     version: 0.1.0
+  mmcai-cluster:
+  - apiVersion: v2
+    appVersion: internal-prerelease-1
+    created: "2024-08-15T18:19:06.515685492Z"
+    dependencies:
+    - condition: kube-prometheus-stack.enabled
+      name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 60.4.0
+    - name: kueue
+      repository: https://memverge.github.io/mmc.ai-setup
+      version: 0.1.0
+    - condition: mysql.enabled
+      name: mysql
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 11.1.15
+    description: Install the mmc.ai platform
+    digest: 0f277e603a30c6cb29177ebf6255a92ed288cd4183b8a9c178b0a4fd29ac6b3b
+    name: mmcai-cluster
+    type: application
+    urls:
+    - https://memverge.github.io/mmc.ai-setup/mmcai-cluster-0.1.0.tgz
+    version: 0.1.0
   mmcai-manager:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-08-12T20:06:04.899037768Z"
+    created: "2024-08-15T18:19:06.520343187Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
       version: 4.11.1
     description: Install the mmc.ai platform management center
-    digest: 9dd1b3cd7027510a72132d1797c60fa77b6eea41d0f085f64c3de1d48b5be09a
+    digest: c767ef2fbb004a0076d1272881af2ce7fedf0cfc300bbad480b21cd77b0682c6
     name: mmcai-manager
     type: application
     urls:
@@ -30,8 +53,8 @@ entries:
     version: 0.1.0
   mmcai-system:
   - apiVersion: v2
-    appVersion: 0.1.0
-    created: "2024-08-12T20:06:05.014534991Z"
+    appVersion: internal-prerelease-1
+    created: "2024-08-15T18:19:06.552322183Z"
     dependencies:
     - condition: gpu-operator.enabled
       name: gpu-operator
@@ -44,11 +67,15 @@ entries:
     - name: kueue
       repository: https://memverge.github.io/mmc.ai-setup
       version: 0.1.0
+    - condition: mysql.enabled
+      name: mysql
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 11.1.15
     description: Install the mmc.ai platform
-    digest: ec75c018cd6f7f9c57c3eb89319bd05ef9cfd4d9d9d6c950ef26cfc5e6295ba7
+    digest: 55f8eed33cf09ae2df0de47ec5330f027bac718194db324e791fc7be34805b10
     name: mmcai-system
     type: application
     urls:
     - https://memverge.github.io/mmc.ai-setup/mmcai-system-0.1.0.tgz
     version: 0.1.0
-generated: "2024-08-12T20:06:04.868839526Z"
+generated: "2024-08-15T18:19:06.483125027Z"
