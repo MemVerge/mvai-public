@@ -249,6 +249,12 @@ Remove Helm installation:
 helm uninstall -n gpu-operator nvidia-gpu-operator
 ```
 
+If uninstallation of the Helm chart fails partway, delete the gpu-operator namespace to remove all associate Kubernetes pods and resources:
+
+```
+kubectl delete ns gpu-operator
+```
+
 ## Uninstalling Kubeflow
 
 > **Important:**
