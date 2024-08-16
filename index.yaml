@@ -3,7 +3,7 @@ entries:
   kueue:
   - apiVersion: v2
     appVersion: v0.8.0
-    created: "2024-08-15T23:02:02.975977316Z"
+    created: "2024-08-16T21:24:41.561000575Z"
     description: Kueue is a set of APIs and controller for job queueing. It is a job-level
       manager that decides when a job should be admitted to start (as in pods can
       be created) and when it should stop (as in active pods should be deleted).
@@ -16,7 +16,29 @@ entries:
   mmcai-cluster:
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T23:02:03.059837929Z"
+    created: "2024-08-16T21:24:41.674752095Z"
+    dependencies:
+    - condition: kube-prometheus-stack.enabled
+      name: kube-prometheus-stack
+      repository: https://prometheus-community.github.io/helm-charts
+      version: 60.4.0
+    - name: kueue
+      repository: https://memverge.github.io/mmc.ai-setup
+      version: 0.1.0
+    - condition: mysql.enabled
+      name: mysql
+      repository: oci://registry-1.docker.io/bitnamicharts
+      version: 11.1.15
+    description: Install the mmc.ai platform
+    digest: 21d8ef87e522eb27bc67a3e6ccf72bef751d88c57a04a08ed32cbfdc462bd472
+    name: mmcai-cluster
+    type: application
+    urls:
+    - https://memverge.github.io/mmc.ai-setup/mmcai-cluster-999.999.999.tgz
+    version: 999.999.999
+  - apiVersion: v2
+    appVersion: internal-prerelease-1
+    created: "2024-08-16T21:24:41.646594045Z"
     dependencies:
     - condition: kube-prometheus-stack.enabled
       name: kube-prometheus-stack
@@ -38,7 +60,7 @@ entries:
     version: 99.99.99
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T23:02:03.032400817Z"
+    created: "2024-08-16T21:24:41.617500904Z"
     dependencies:
     - condition: kube-prometheus-stack.enabled
       name: kube-prometheus-stack
@@ -60,7 +82,7 @@ entries:
     version: 0.1.0
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T23:02:03.003815961Z"
+    created: "2024-08-16T21:24:41.589176026Z"
     dependencies:
     - condition: kube-prometheus-stack.enabled
       name: kube-prometheus-stack
@@ -83,7 +105,7 @@ entries:
   mmcai-manager:
   - apiVersion: v2
     appVersion: 0.1.0
-    created: "2024-08-15T23:02:03.063377943Z"
+    created: "2024-08-16T21:24:41.678852548Z"
     dependencies:
     - name: ingress-nginx
       repository: https://kubernetes.github.io/ingress-nginx
@@ -98,7 +120,7 @@ entries:
   mmcai-system:
   - apiVersion: v2
     appVersion: internal-prerelease-1
-    created: "2024-08-15T23:02:03.094340831Z"
+    created: "2024-08-16T21:24:41.712175632Z"
     dependencies:
     - condition: gpu-operator.enabled
       name: gpu-operator
@@ -122,4 +144,4 @@ entries:
     urls:
     - https://memverge.github.io/mmc.ai-setup/mmcai-system-0.1.0.tgz
     version: 0.1.0
-generated: "2024-08-15T23:02:02.972340021Z"
+generated: "2024-08-16T21:24:41.551883766Z"
