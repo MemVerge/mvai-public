@@ -15,9 +15,6 @@ jobs:
       - name: checkout self
         uses: actions/checkout@v4
 
-      - name: install helm
-        uses: azure/setup-helm@v4.2.0
-
       - name: generate index
         run: helm repo index . --url https://memverge.github.io/mmc.ai-setup
 
