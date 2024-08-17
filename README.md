@@ -91,6 +91,7 @@ chmod +x deepops-setup.sh
 Download and run `kubeflow-setup.sh` on a node with kubectl and kustomize:
 ```bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O git-clone.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/git-clone.sh
 wget -O kubeflow-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/kubeflow-setup.sh
 chmod +x kubeflow-setup.sh
 ./kubeflow-setup.sh
@@ -135,7 +136,6 @@ wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup
 wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mysql-pre-setup.sh
 chmod +x mysql-pre-setup.sh
 ./mysql-pre-setup.sh
-# Answer prompts as needed.
 ```
 
 
@@ -147,6 +147,7 @@ wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup
 wget -O mmcai-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mmcai-setup.sh
 chmod +x mmcai-setup.sh
 ./mmcai-setup.sh
+# Answer prompts as needed.
 ```
 
 Once deployed, the MMC.AI dashboard should be accessible at `http://<control-plane-ip>:32323`.
@@ -257,6 +258,9 @@ kubectl delete ns gpu-operator
 
 ## Uninstalling Kubeflow
 
-> **Important:**
-> There is no way to uninstall/upgrade Kubeflow currently.
-> Download and run `kubeflow-teardown.sh` on a node with kubectl and kustomize.
+```bash
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
+wget -O kubeflow-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/kubeflow-teardown.sh
+chmod +x kubeflow-teardown.sh
+./kubeflow-teardown.sh
+```
