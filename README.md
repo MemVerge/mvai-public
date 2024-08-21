@@ -80,8 +80,8 @@ Within there are four relevant headers:
 
 Once Ansible configuration is complete, copy these commands into your terminal to install Kubernetes and NVIDIA's NFS client provisioner:
 ```bash
-wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
-wget -O deepops-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/deepops-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O deepops-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/deepops-setup.sh
 chmod +x deepops-setup.sh
 ./deepops-setup.sh
 ```
@@ -90,9 +90,9 @@ chmod +x deepops-setup.sh
 
 Download and run `kubeflow-setup.sh` on a node with kubectl and kustomize:
 ```bash
-wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
-wget -O git-clone.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/git-clone.sh
-wget -O kubeflow-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/kubeflow-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O git-clone.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/git-clone.sh
+wget -O kubeflow-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/kubeflow-setup.sh
 chmod +x kubeflow-setup.sh
 ./kubeflow-setup.sh
 ```
@@ -100,9 +100,9 @@ chmod +x kubeflow-setup.sh
 
 Download and run `nvidia-gpu-operator-setup.sh` on the node used to manage Helm installations:
 ```bash
-wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
-wget -O gpu-operator-values.yaml https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/gpu-operator-values.yaml
-wget -O nvidia-gpu-operator-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/nvidia-gpu-operator-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O gpu-operator-values.yaml https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/gpu-operator-values.yaml
+wget -O nvidia-gpu-operator-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/nvidia-gpu-operator-setup.sh
 chmod +x nvidia-gpu-operator-setup.sh
 ./nvidia-gpu-operator-setup.sh
 ```
@@ -132,8 +132,8 @@ Download and run `mysql-pre-setup.sh` on the node used for the billing database:
 > `mysql-pre-setup.sh` will manually prompt for the hostname of the current node.
 
 ```bash
-wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
-wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mysql-pre-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-pre-setup.sh
 chmod +x mysql-pre-setup.sh
 ./mysql-pre-setup.sh
 ```
@@ -150,8 +150,8 @@ helm registry login ghcr.io/memverge/charts
 Download and run `mmcai-setup.sh` on the control plane node:
 
 ``` bash
-wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
-wget -O mmcai-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/mmcai-setup.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O mmcai-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-setup.sh
 chmod +x mmcai-setup.sh
 ./mmcai-setup.sh
 # Answer prompts as needed.
@@ -266,8 +266,8 @@ kubectl delete ns gpu-operator
 ## Uninstalling Kubeflow
 
 ```bash
-wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/logging.sh
-wget -O kubeflow-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/setup/kubeflow-teardown.sh
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O kubeflow-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/kubeflow-teardown.sh
 chmod +x kubeflow-teardown.sh
 ./kubeflow-teardown.sh
 ```
