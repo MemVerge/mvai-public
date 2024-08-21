@@ -138,6 +138,13 @@ chmod +x mysql-pre-setup.sh
 ./mysql-pre-setup.sh
 ```
 
+#### (Internal) Helm login
+In order to download the pre-release packages, MemVerge team members must authenticate with the Github container registry like so:
+
+``` bash
+helm registry login ghcr.io/memverge/charts
+# Answer prompts as needed.
+```
 
 #### MMC.AI Cluster and Management Planes
 Download and run `mmcai-setup.sh` on the control plane node:
