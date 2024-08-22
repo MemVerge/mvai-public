@@ -74,11 +74,11 @@ Within there are four relevant headers:
 - **`[etcd]`**
   Holds the node, or nodes, that will host Kubernetes' `etcd` key-value store. This is also, most likely, the provisioning machine.
 - **`[kube-node]`**
-  Should contain the cluster's "worker nodes" -- that is, nodes that do not appear in `[kube-master]`, but are expected to run workloads. 
+  Should contain the cluster's "worker nodes" -- that is, nodes that do not appear in `[kube-master]`, but are expected to run workloads.
 
 ## Installing Kubernetes
 
-Once Ansible configuration is complete, copy these commands into your terminal to install Kubernetes and NVIDIA's NFS client provisioner:
+Once Ansible configuration is complete, copy these commands into your terminal to install Kubernetes:
 ```bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
 wget -O deepops-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/deepops-setup.sh
@@ -128,9 +128,6 @@ kubectl apply -f mmcai-ghcr-secret.yaml
 
 #### Billing Database
 Download and run `mysql-pre-setup.sh` on the node used for the billing database:
-> **Tip:**
-> `mysql-pre-setup.sh` will manually prompt for the hostname of the current node.
-
 ```bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
 wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-pre-setup.sh
@@ -148,7 +145,6 @@ helm registry login ghcr.io/memverge/charts
 
 #### MMC.AI Cluster and Management Planes
 Download and run `mmcai-setup.sh` on the control plane node:
-
 ``` bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
 wget -O mmcai-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-setup.sh
@@ -171,9 +167,9 @@ On the control plane node:
 helm uninstall -n mmcai-system mmcai-manager
 ```
 
-### Cluster
+### Cluster Components
 
-Remove CRDs and CRs:
+#### CRDs and CRs
 > **Caution:**
 > Removal of CRDs cascades to all associated resources. Skip this step if you wish to keep custom resources.
 >
@@ -183,7 +179,8 @@ Remove CRDs and CRs:
 ```bash
 # MMC.AI
 kubectl delete crd departments.mmc.ai
-kubectl delete crd engines.mmcloud.io
+# The Engine CRD will be deleted by Helm on a successful uninstallation.
+#kubectl delete crd engines.mmcloud.io
 
 kubectl delete crd admissionchecks.kueue.x-k8s.io
 kubectl delete crd clusterqueues.kueue.x-k8s.io
@@ -208,28 +205,35 @@ kubectl delete crd servicemonitors.monitoring.coreos.com
 kubectl delete crd thanosrulers.monitoring.coreos.com
 ```
 
-Remove Helm installation:
+#### Helm Installation
 ```
 helm uninstall -n <RELEASE_NAMESPACE> <RELEASE_NAME>
 ```
 
-Remove secrets:
+#### Secrets
 ```
 kubectl delete secret -n <RELEASE_NAMESPACE> memverge-dockerconfig
 kubectl delete secret -n <MMCLOUD_OPERATOR_NAMESPACE> memverge-dockerconfig
 kubectl delete secret -n <RELEASE_NAMESPACE> mysql-secret
 ```
 
-Remove namespaces:
+#### Namespaces
 ```
-kubectl delete namespace <RELEASE_NAMESPACE> 
+kubectl delete namespace <RELEASE_NAMESPACE>
 kubectl delete namespace <MMCLOUD_OPERATOR_NAMESPACE>
 kubectl delete namespace <PROMETHEUS_NAMESPACE>
 ```
 
-Remove billing database data:
-```
-rm -rf /mnt/disks/mmai-mysql-billing
+#### Billing Database
+> **Important:**
+> This will remove all billing database data. Skip this step if you wish to keep billing database data.
+> Only do this after removing the Helm installation.
+Download and run `mysql-teardown.sh` on the control plane node:
+```bash
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O mysql-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-teardown.sh
+chmod +x mysql-teardown.sh
+./mysql-teardown.sh
 ```
 
 ## Uninstalling NVIDIA GPU Operator
@@ -259,7 +263,7 @@ helm uninstall -n gpu-operator nvidia-gpu-operator
 
 If uninstallation of the Helm chart fails partway, delete the gpu-operator namespace to remove all associate Kubernetes pods and resources:
 
-```
+```bash
 kubectl delete ns gpu-operator
 ```
 
