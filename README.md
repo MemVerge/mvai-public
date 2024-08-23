@@ -160,14 +160,21 @@ Once deployed, the MMC.AI dashboard should be accessible at `http://<control-pla
 
 ## Uninstalling MMC.AI
 
-### Management Center
+In order to fully uninstall MMC.AI, run the commands in the following subsections.
+
+#### MMC.AI Manager
 
 On the control plane node:
 ```bash
 helm uninstall -n mmcai-system mmcai-manager
 ```
 
-### Cluster Components
+#### MMC.AI Cluster
+```
+helm uninstall -n mmcai-system mmcai-cluster
+```
+
+### Other Components
 
 #### CRDs and CRs
 > **Caution:**
@@ -205,23 +212,22 @@ kubectl delete crd servicemonitors.monitoring.coreos.com
 kubectl delete crd thanosrulers.monitoring.coreos.com
 ```
 
-#### Helm Installation
-```
-helm uninstall -n <RELEASE_NAMESPACE> <RELEASE_NAME>
-```
-
 #### Secrets
 ```
-kubectl delete secret -n <RELEASE_NAMESPACE> memverge-dockerconfig
-kubectl delete secret -n <MMCLOUD_OPERATOR_NAMESPACE> memverge-dockerconfig
-kubectl delete secret -n <RELEASE_NAMESPACE> mysql-secret
+kubectl delete secret -n mmcai-system memverge-dockerconfig
+kubectl delete secret -n mmcloud-operator-system memverge-dockerconfig
+kubectl delete secret -n mmcai-system mysql-secret
 ```
+
+> **Note:**
+> If the `memverge-dockerconfig` secrets or their parent `mmcai-system`/`mmcloud-operator-system` namespaces are deleted, and you wish to reinstall MMC.AI, you must reapply `mmcai-ghcr-secret.yaml`.
+>
 
 #### Namespaces
 ```
-kubectl delete namespace <RELEASE_NAMESPACE>
-kubectl delete namespace <MMCLOUD_OPERATOR_NAMESPACE>
-kubectl delete namespace <PROMETHEUS_NAMESPACE>
+kubectl delete ns mmcai-system
+kubectl delete ns mmcloud-operator-system
+kubectl delete ns monitoring
 ```
 
 #### Billing Database
