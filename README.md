@@ -117,6 +117,25 @@ chmod +x nvidia-gpu-operator-setup.sh
 > 4. NVIDIA GPU Operator installed via Helm in cluster with overrides from `gpu-operator-values.yaml`.
 > 5. Node(s) in cluster with [Helm](https://helm.sh/docs/intro/quickstart/) installed.
 
+#### (Internal) Helm Login Secrets
+In order to download the pre-release packages, MemVerge team members must authenticate with the Github container registry.
+
+First, create a personal access token on this Github page: https://github.com/settings/tokens
+
+Ctrl-f to find `read:packages` and select the checkbox.
+
+Then press "**Generate token**."
+
+Copy the token that is highlighted in green. Save it to your local machine if you do not want to create a new token during reinstallation.
+
+Then run the following command:
+
+``` bash
+helm registry login ghcr.io/memverge/charts
+# Username: <github-username>
+# Password: <personal-access-token>
+```
+
 ### Image Pull Secrets
 
 Copy the `mmcai-ghcr-secret.yaml` file provided by MemVerge to the node with `kubectl` access (i.e., the "control plane node"). Then, deploy its image pull credentials to the cluster like so:
@@ -133,14 +152,6 @@ wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/
 wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-pre-setup.sh
 chmod +x mysql-pre-setup.sh
 ./mysql-pre-setup.sh
-```
-
-#### (Internal) Helm login
-In order to download the pre-release packages, MemVerge team members must authenticate with the Github container registry like so:
-
-``` bash
-helm registry login ghcr.io/memverge/charts
-# Answer prompts as needed.
 ```
 
 #### MMC.AI Cluster and Management Planes
