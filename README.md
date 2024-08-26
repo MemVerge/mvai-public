@@ -127,7 +127,7 @@ kubectl apply -f mmcai-ghcr-secret.yaml
 ### Cluster Components
 
 #### Billing Database
-Download and run `mysql-pre-setup.sh` on the node used for the billing database:
+Download and run `mysql-pre-setup.sh` on the control plane node:
 ```bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
 wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-pre-setup.sh
@@ -158,126 +158,10 @@ Once deployed, the MMC.AI dashboard should be accessible at `http://<control-pla
 
 # MMC.AI Teardown Guide
 
-## Uninstalling MMC.AI
-
-In order to fully uninstall MMC.AI, run the commands in the following subsections.
-
-#### MMC.AI Manager
-
-On the control plane node:
-```bash
-helm uninstall -n mmcai-system mmcai-manager
-```
-
-#### MMC.AI Cluster
-```
-helm uninstall -n mmcai-system mmcai-cluster
-```
-
-### Other Components
-
-#### CRDs and CRs
-> **Caution:**
-> Removal of CRDs cascades to all associated resources. Skip this step if you wish to keep custom resources.
->
-> **Important:**
-> Manual intervention may be needed if custom resources associated with CRDs still exist and you have already uninstalled the controllers responsible for their finalizers.
-
-```bash
-# MMC.AI
-kubectl delete crd departments.mmc.ai
-# The Engine CRD will be deleted by Helm on a successful uninstallation.
-#kubectl delete crd engines.mmcloud.io
-
-kubectl delete crd admissionchecks.kueue.x-k8s.io
-kubectl delete crd clusterqueues.kueue.x-k8s.io
-kubectl delete crd localqueues.kueue.x-k8s.io
-kubectl delete crd multikueueclusters.kueue.x-k8s.io
-kubectl delete crd multikueueconfigs.kueue.x-k8s.io
-kubectl delete crd provisioningrequestconfigs.kueue.x-k8s.io
-kubectl delete crd resourceflavors.kueue.x-k8s.io
-kubectl delete crd workloadpriorityclasses.kueue.x-k8s.io
-kubectl delete crd workloads.kueue.x-k8s.io
-
-# Prometheus
-kubectl delete crd alertmanagerconfigs.monitoring.coreos.com
-kubectl delete crd alertmanagers.monitoring.coreos.com
-kubectl delete crd podmonitors.monitoring.coreos.com
-kubectl delete crd probes.monitoring.coreos.com
-kubectl delete crd prometheusagents.monitoring.coreos.com
-kubectl delete crd prometheuses.monitoring.coreos.com
-kubectl delete crd prometheusrules.monitoring.coreos.com
-kubectl delete crd scrapeconfigs.monitoring.coreos.com
-kubectl delete crd servicemonitors.monitoring.coreos.com
-kubectl delete crd thanosrulers.monitoring.coreos.com
-```
-
-#### Secrets
-```
-kubectl delete secret -n mmcai-system memverge-dockerconfig
-kubectl delete secret -n mmcloud-operator-system memverge-dockerconfig
-kubectl delete secret -n mmcai-system mysql-secret
-```
-
-> **Note:**
-> If the `memverge-dockerconfig` secrets or their parent `mmcai-system`/`mmcloud-operator-system` namespaces are deleted, and you wish to reinstall MMC.AI, you must reapply `mmcai-ghcr-secret.yaml`.
->
-
-#### Namespaces
-```
-kubectl delete ns mmcai-system
-kubectl delete ns mmcloud-operator-system
-kubectl delete ns monitoring
-```
-
-#### Billing Database
-> **Important:**
-> This will remove all billing database data. Skip this step if you wish to keep billing database data.
-> Only do this after removing the Helm installation.
-Download and run `mysql-teardown.sh` on the control plane node:
+Download and run the interactive `mmcai-teardown.sh` script on the control plane node. You will have a chance to confirm your changes:
 ```bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
-wget -O mysql-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-teardown.sh
-chmod +x mysql-teardown.sh
-./mysql-teardown.sh
-```
-
-## Uninstalling NVIDIA GPU Operator
-
-Remove CRDs and CRs:
-> **Caution:**
-> Removal of CRDs cascades to all associated resources. Skip this step if you wish to keep custom resources.
->
-> **Important:**
-> Manual intervention may be needed if custom resources associated with CRDs still exist and you have already uninstalled the controllers responsible for their finalizers.
-
-```bash
-# NVIDIA
-kubectl delete crd clusterpolicies.nvidia.com
-kubectl delete crd nvidiadrivers.nvidia.com
-
-# NFD
-kubectl delete crd nodefeatures.nfd.k8s-sigs.io
-kubectl delete crd nodefeaturerules.nfd.k8s-sigs.io
-```
-
-Remove Helm installation:
-
-```bash
-helm uninstall -n gpu-operator nvidia-gpu-operator
-```
-
-If uninstallation of the Helm chart fails partway, delete the gpu-operator namespace to remove all associate Kubernetes pods and resources:
-
-```bash
-kubectl delete ns gpu-operator
-```
-
-## Uninstalling Kubeflow
-
-```bash
-wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
-wget -O kubeflow-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/kubeflow-teardown.sh
-chmod +x kubeflow-teardown.sh
-./kubeflow-teardown.sh
+wget -O mmcai-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-teardown.sh
+chmod +x mmcai-teardown.sh
+./mmcai-teardown.sh
 ```
