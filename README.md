@@ -169,7 +169,12 @@ Once deployed, the MMC.AI dashboard should be accessible at `http://<control-pla
 
 # MMC.AI Teardown Guide
 
-Download and run the interactive `mmcai-teardown.sh` script on the control plane node. You will have a chance to confirm your changes:
+Download and run the interactive `mmcai-teardown.sh` script on the control plane node.
+
+Some teardown operations are dangerous and may cause data loss or other installations in the cluster to malfunction, if they rely on the same resources.
+If you have nothing else installed in the cluster and want to remove everything, answer 'y' to each prompt.
+
+You will have a chance to confirm your changes after making your selections:
 ```bash
 wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
 wget -O mmcai-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-teardown.sh
