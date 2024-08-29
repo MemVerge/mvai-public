@@ -35,8 +35,12 @@ div
 
 ## Create MySQL secret
 
-kubectl -n $NAMESPACE get secret mysql-secret &>/dev/null || \
-kubectl -n $NAMESPACE create secret generic mysql-secret --from-literal=mysql-root-password=$MYSQL_ROOT_PASSWORD --from-literal=mysql-password=$MYSQL_ROOT_PASSWORD # TODO: Determine which passwords are needed for what
+kubectl -n $NAMESPACE get secret mmai-mysql-secret &>/dev/null || \
+# While we only need mysql-root-password, all of these keys are necessary for the secret according to the mysql Helm chart documentation
+kubectl -n $NAMESPACE create secret generic mmai-mysql-secret \
+    --from-literal=mysql-root-password=$MYSQL_ROOT_PASSWORD \
+    --from-literal=mysql-password=$MYSQL_ROOT_PASSWORD \
+    --from-literal=mysql-replication-password=$MYSQL_ROOT_PASSWORD
 
 ## Create image pull secrets
 

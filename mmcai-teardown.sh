@@ -264,7 +264,7 @@ if $remove_billing_database; then
     chmod +x mysql-teardown.sh
     ./mysql-teardown.sh
     rm mysql-teardown.sh
-    kubectl delete secret -n $RELEASE_NAMESPACE mysql-secret --ignore-not-found
+    kubectl delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
 fi
 
 if $remove_memverge_secrets; then
