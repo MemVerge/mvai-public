@@ -42,7 +42,7 @@ These instructions come from [NVIDIA’s guide on Ansible](https://github.com/NV
 
 The following set of commands will install Ansible on the provisioning machine. They must be run as a regular user.
 ```bash
-git clone git@github.com:NVIDIA/deepops.git
+git clone https://github.com/NVIDIA/deepops.git
 cd ./deepops
 git checkout 23.08
 ./scripts/setup.sh
