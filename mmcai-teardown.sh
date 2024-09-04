@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source logging.sh
+source venv.sh
 
 remove_mmcai_cluster=false
 remove_mmcai_manager=false
@@ -18,8 +19,25 @@ force_if_remove_cluster_resources=false
 
 confirm_selection=false
 
-RELEASE_NAMESPACE=mmcai-system
+ANSIBLE_VENV='mmai-ansible'
+ANSIBLE_INVENTORY_DATABASE_NODE_GROUP='mmai_database'
 
+RELEASE_NAMESPACE='mmcai-system'
+MMCLOUD_OPERATOR_NAMESPACE='mmcloud-operator-system'
+PROMETHEUS_NAMESPACE='monitoring'
+
+cleanup() {
+    dvenv
+    rvenv $ANSIBLE_VENV
+    rmdir $VENV_DIR
+    exit
+}
+
+trap cleanup EXIT
+
+cvenv $ANSIBLE_VENV
+avenv $ANSIBLE_VENV
+pip install -q ansible
 
 # Sanity check.
 log "Getting version to check connectivity."
@@ -29,7 +47,6 @@ if ! kubectl version; then
 else
     log_good "Proceeding with teardown."
 fi
-
 
 # Determine if mmcai-cluster and mmcai-manager are installed.
 if helm list -n mmcai-system -a -q | grep mmcai-cluster; then
@@ -46,6 +63,7 @@ else
     log "MMC.AI Manager not detected."
 fi
 
+################################################################################
 
 # Remove mmcai-cluster?
 if $mmcai_cluster_detected; then
@@ -119,7 +137,16 @@ if $no_mmcai_cluster; then
         [Yy]* ) remove_billing_database=true;;
         * ) remove_billing_database=false;;
     esac
-
+    if $remove_billing_database; then
+        echo "Provide an Ansible inventory containing nodes with billing databases to remove (node group [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP])."
+        ANSIBLE_INVENTORY=''
+        until [ -e $ANSIBLE_INVENTORY ]; do
+            read -p "Ansible inventory: " ANSIBLE_INVENTORY
+            if ! [ -e $ANSIBLE_INVENTORY ]; then
+                log_bad "Path does not exist."
+            fi
+        done
+    fi
 
     # Remove MemVerge image pull secrets?
     div
@@ -274,9 +301,10 @@ fi
 if $remove_billing_database; then
     div
     log_good "Removing billing database..."
-    wget -O mysql-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-teardown.sh
-    chmod +x mysql-teardown.sh
-    ./mysql-teardown.sh
+
+    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-teardown-playbook.yaml | \
+    ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
+
     rm mysql-teardown.sh
     kubectl delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
 fi
@@ -285,7 +313,7 @@ if $remove_memverge_secrets; then
     div
     log_good "Removing MemVerge image pull secrets..."
     kubectl delete secret -n $RELEASE_NAMESPACE memverge-dockerconfig --ignore-not-found
-    kubectl delete secret -n mmcloud-operator-system memverge-dockerconfig --ignore-not-found
+    kubectl delete secret -n $MMCLOUD_OPERATOR_NAMESPACE memverge-dockerconfig --ignore-not-found
 fi
 
 if $remove_namespaces; then
@@ -326,7 +354,7 @@ if $remove_prometheus_crds_namespace; then
     for crd in $prometheus_crds; do
         kubectl delete crd $crd --ignore-not-found
     done
-    kubectl delete namespace monitoring --ignore-not-found
+    kubectl delete namespace $PROMETHEUS_NAMESPACE --ignore-not-found
 fi
 
 if $remove_kubeflow; then
