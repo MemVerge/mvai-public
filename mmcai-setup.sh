@@ -166,64 +166,6 @@ else
     be_mmcai_cluster=false
 fi
 
-if $install_mmcai_cluster; then
-    ANSIBLE_INVENTORY=''
-    until [ -e $ANSIBLE_INVENTORY ]; do
-        read -p "Ansible inventory: " ANSIBLE_INVENTORY
-        if ! [ -e $ANSIBLE_INVENTORY ]; then
-            log_bad "Path does not exist."
-        fi
-    done
-
-    MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | jq -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
-    while (( $(echo $MYSQL_NODE_HOSTNAME | wc -w) != 1 )); do
-        log_bad "Wrong number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes in Ansible inventory."
-        echo "Number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes must be 1. Please fix Ansible inventory before continuing."
-        read -p "Continue setup [Y/n]:" continue_setup
-        case $continue_setup in
-            [Nn]* ) continue_setup=false;;
-            * ) continue_setup=true;;
-        esac
-        if ! $continue_setup; then
-            exit 0
-        fi
-        MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | jq -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
-    done
-
-    if kubectl get secret -n $RELEASE_NAMESPACE mmai-mysql-secret &>/dev/null; then
-        mysql_secret_exists=true
-        log "Existing billing database secret found."
-    else
-        mysql_secret_exists=false
-    fi
-
-    if $mysql_secret_exists; then
-        echo "Reuse existing billing database secret? If N/n, the existing database secret will be overwritten."
-        read -p "Reuse existing secret [Y/n]:" reuse_database_secret
-        case $reuse_database_secret in
-            [Nn]* ) create_mysql_secret=true;;
-            * ) create_mysql_secret=false;;
-        esac
-    else
-        create_mysql_secret=true
-    fi
-
-    if $create_mysql_secret; then
-        echo "Enter new billing database secret."
-        MYSQL_ROOT_PASSWORD=''
-        MYSQL_ROOT_PASSWORD_CONFIRMATION='nonempty'
-        until [ "$MYSQL_ROOT_PASSWORD" = "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; do
-            read -sp "Billing database root password:" MYSQL_ROOT_PASSWORD
-            read -sp "Confirm database root password:" MYSQL_ROOT_PASSWORD_CONFIRMATION
-            if [ "$MYSQL_ROOT_PASSWORD" != "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; then
-                log_bad "Passwords do not match."
-            fi
-        done
-    else
-        log "Using existing billing database secret."
-    fi
-fi
-
 if $install_mmcai_cluster && nvidia_gpu_operator_detected; then
     echo "MMC.AI Cluster requires NVIDIA GPU Operator installed with a specific configuration. If existing NVIDIA GPU Operator was not installed using this script, please uninstall existing NVIDIA GPU Operator before continuing."
     read -p "Continue setup [Y/n]:" continue_setup
@@ -310,6 +252,66 @@ if ! $be_kubeflow && ! cert_manager_detected; then
     fi
 fi
 
+if $install_mmcai_cluster || $install_kubeflow; then
+    ANSIBLE_INVENTORY=''
+    until [ -e $ANSIBLE_INVENTORY ]; do
+        read -p "Ansible inventory: " ANSIBLE_INVENTORY
+        if ! [ -e $ANSIBLE_INVENTORY ]; then
+            log_bad "Path does not exist."
+        fi
+    done
+
+    if $install_mmcai_cluster; then
+        MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | jq -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
+        while (( $(echo $MYSQL_NODE_HOSTNAME | wc -w) != 1 )); do
+            log_bad "Wrong number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes in Ansible inventory."
+            echo "Number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes must be 1. Please fix Ansible inventory before continuing."
+            read -p "Continue setup [Y/n]:" continue_setup
+            case $continue_setup in
+                [Nn]* ) continue_setup=false;;
+                * ) continue_setup=true;;
+            esac
+            if ! $continue_setup; then
+                exit 0
+            fi
+            MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | jq -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
+        done
+
+        if kubectl get secret -n $RELEASE_NAMESPACE mmai-mysql-secret &>/dev/null; then
+            mysql_secret_exists=true
+            log "Existing billing database secret found."
+        else
+            mysql_secret_exists=false
+        fi
+
+        if $mysql_secret_exists; then
+            echo "Reuse existing billing database secret? If N/n, the existing database secret will be overwritten."
+            read -p "Reuse existing secret [Y/n]:" reuse_database_secret
+            case $reuse_database_secret in
+                [Nn]* ) create_mysql_secret=true;;
+                * ) create_mysql_secret=false;;
+            esac
+        else
+            create_mysql_secret=true
+        fi
+
+        if $create_mysql_secret; then
+            echo "Enter new billing database secret."
+            MYSQL_ROOT_PASSWORD=''
+            MYSQL_ROOT_PASSWORD_CONFIRMATION='nonempty'
+            until [ "$MYSQL_ROOT_PASSWORD" = "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; do
+                read -sp "Billing database root password:" MYSQL_ROOT_PASSWORD
+                read -sp "Confirm database root password:" MYSQL_ROOT_PASSWORD_CONFIRMATION
+                if [ "$MYSQL_ROOT_PASSWORD" != "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; then
+                    log_bad "Passwords do not match."
+                fi
+            done
+        else
+            log "Using existing billing database secret."
+        fi
+    fi
+fi
+
 ################################################################################
 
 div
@@ -350,6 +352,10 @@ fi
 if $install_kubeflow; then
     div
     log_good "Installing Kubeflow..."
+    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/sysctl-playbook.yaml | \
+    ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
+
+    # TODO: Currently, this can only work from deepops directory.
     wget -O kubeflow-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/kubeflow-setup.sh
     chmod +x kubeflow-setup.sh
     ./kubeflow-setup.sh
