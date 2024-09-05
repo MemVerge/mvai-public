@@ -68,7 +68,7 @@ Within there are four relevant headers:
     # The following will configure the local machine as a target:
     # host-1        ansible_host=localhost
   ```
-  In order to have the Kubernetes node names match with the names of the servers in the cluster, it is best to let `<host-N-name>` be the domain name of the remote host. You can determine a host's domain by running the `hostname` command on each machine.
+  In order to have the Kubernetes node names match with the names of the servers in the cluster, it is best to let `<host-N-name>` be the domain name of the remote host. You can determine a host's domain by running the `hostname` command (without the optional `-f` flag, which prints the fully qualified domain name) on each machine.
 - **`[kube-master]`**
   The `<host-name>` of the node in the cluster where Kubernetes' control plane will run. This is most likely the provisioning machine.
 - **`[etcd]`**
@@ -96,6 +96,15 @@ wget -O kubeflow-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setu
 chmod +x kubeflow-setup.sh
 ./kubeflow-setup.sh
 ```
+
+The following command prints the port for the Kubeflow Central Dashboard:
+```bash
+echo $(kubectl get svc istio-ingressgateway -n istio-system -o jsonpath='{.spec.ports[?(@.port==80)].nodePort}')
+```
+
+Using this port, the URL `http://<node-ip>:<port>` will fetch the Kubeflow Central Dashboard, where `<node-ip>` is the IPv4 address of any node on the cluster.
+
+
 ## Installing NVIDIA GPU Operator
 
 Download and run `nvidia-gpu-operator-setup.sh` on the node used to manage Helm installations:
@@ -165,7 +174,6 @@ chmod +x mmcai-setup.sh
 ```
 
 Once deployed, the MMC.AI dashboard should be accessible at `http://<control-plane-ip>:32323`.
-
 
 # MMC.AI Teardown Guide
 
