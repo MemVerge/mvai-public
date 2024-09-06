@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-source logging.sh
-source venv.sh
+source common.sh
 
 remove_mmcai_cluster=false
 remove_mmcai_manager=false
@@ -18,26 +17,6 @@ remove_kubeflow=false
 force_if_remove_cluster_resources=false
 
 confirm_selection=false
-
-ANSIBLE_VENV='mmai-ansible'
-ANSIBLE_INVENTORY_DATABASE_NODE_GROUP='mmai_database'
-
-RELEASE_NAMESPACE='mmcai-system'
-MMCLOUD_OPERATOR_NAMESPACE='mmcloud-operator-system'
-PROMETHEUS_NAMESPACE='monitoring'
-
-cleanup() {
-    dvenv
-    rvenv $ANSIBLE_VENV
-    rmdir $VENV_DIR
-    exit
-}
-
-trap cleanup EXIT
-
-cvenv $ANSIBLE_VENV
-avenv $ANSIBLE_VENV
-pip install -q ansible
 
 # Sanity check.
 log "Getting version to check connectivity."
@@ -302,7 +281,7 @@ if $remove_billing_database; then
     div
     log_good "Removing billing database..."
 
-    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-teardown-playbook.yaml | \
+    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/mysql-teardown-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
     rm mysql-teardown.sh
@@ -360,10 +339,24 @@ fi
 if $remove_kubeflow; then
     div
     log_good "Removing Kubeflow..."
-    wget -O kubeflow-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/kubeflow-teardown.sh
-    chmod +x kubeflow-teardown.sh
-    ./kubeflow-teardown.sh
-    rm kubeflow-teardown.sh
+
+    log "Cloning Kubeflow manifests..."
+    git clone https://github.com/kubeflow/manifests.git $TEMP_DIR/kubeflow --branch $KUBEFLOW_VERSION
+
+    ( # Subshell to change directory.
+        cd $TEMP_DIR/kubeflow
+        attempts=5
+        log "Deleting all Kubeflow resources..."
+        log "Attempts remaining: $((attempts))"
+        while [ $attempts -gt 0 ] && ! kustomize build example | kubectl delete --ignore-not-found -f -; do
+            attempts=$((attempts - 1))
+            log "Kubeflow removal incomplete."
+            log "Attempts remaining: $((attempts))"
+            log "Waiting 15 seconds before attempt..."
+            sleep 15
+        done
+        log "Kubeflow removed."
+    )
 fi
 
 div

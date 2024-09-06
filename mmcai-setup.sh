@@ -2,39 +2,15 @@
 
 set -euo pipefail
 
-source logging.sh
-source venv.sh
+source common.sh
 
 install_mmcai_manager=false
 install_mmcai_cluster=false
 install_nvidia_gpu_operator=false
 install_kubeflow=false
-install_cert_manager=false # Allow instead of kubeflow if not installing mmcai-manager
+install_cert_manager=false # Allow instead of kubeflow if not installing mmcai-manager.
 
 confirm_selection=false
-
-ANSIBLE_VENV='mmai-ansible'
-ANSIBLE_INVENTORY_DATABASE_NODE_GROUP='mmai_database'
-
-RELEASE_NAMESPACE='mmcai-system'
-MMCLOUD_OPERATOR_NAMESPACE='mmcloud-operator-system'
-PROMETHEUS_NAMESPACE='monitoring'
-
-CERT_MANAGER_VERSION='v1.15.3'
-NVIDIA_GPU_OPERATOR_VERSION='v24.3.0'
-
-cleanup() {
-    dvenv
-    rvenv $ANSIBLE_VENV
-    rmdir $VENV_DIR
-    exit
-}
-
-trap cleanup EXIT
-
-cvenv $ANSIBLE_VENV
-avenv $ANSIBLE_VENV
-pip install -q ansible
 
 # Sanity check.
 log "Getting version to check connectivity."
@@ -252,6 +228,7 @@ if ! $be_kubeflow && ! cert_manager_detected; then
     fi
 fi
 
+# Get Ansible inventory for components that need it.
 if $install_mmcai_cluster || $install_kubeflow; then
     ANSIBLE_INVENTORY=''
     until [ -e $ANSIBLE_INVENTORY ]; do
@@ -352,14 +329,23 @@ fi
 if $install_kubeflow; then
     div
     log_good "Installing Kubeflow..."
-    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/sysctl-playbook.yaml | \
+
+    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/sysctl-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
-    # TODO: Currently, this can only work from deepops directory.
-    wget -O kubeflow-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/kubeflow-setup.sh
-    chmod +x kubeflow-setup.sh
-    ./kubeflow-setup.sh
-    rm kubeflow-setup.sh
+    log "Cloning Kubeflow manifests..."
+    git clone https://github.com/kubeflow/manifests.git $TEMP_DIR/kubeflow --branch $KUBEFLOW_VERSION
+
+    ( # Subshell to change directory.
+        cd $TEMP_DIR/kubeflow
+        log "Applying all Kubeflow resources..."
+        while ! kustomize build example | kubectl apply -f -; do
+            log "Kubeflow installation incomplete."
+            log "Waiting 15 seconds before attempt..."
+            sleep 15
+        done
+        log "Kubeflow installed."
+    )
 fi
 
 if $install_nvidia_gpu_operator; then
@@ -375,7 +361,7 @@ if $install_mmcai_cluster; then
     div
     log_good "Installing MMC.AI Cluster..."
 
-    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-setup-playbook.yaml | \
+    curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/mysql-setup-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
     # Create namespaces
