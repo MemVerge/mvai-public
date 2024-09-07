@@ -2,7 +2,9 @@
 
 set -euo pipefail
 
+source ensure-prerequisistes.sh
 source common.sh
+source logging.sh
 
 remove_mmcai_cluster=false
 remove_mmcai_manager=false
