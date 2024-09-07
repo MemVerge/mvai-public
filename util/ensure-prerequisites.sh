@@ -3,6 +3,7 @@
 set -euo pipefail
 
 source logging.sh
+source venv.sh
 
 OS=windows
 if [[ "$OSTYPE" == linux* ]]; then
@@ -17,8 +18,6 @@ if [[ "$OS" == windows ]]; then
     exit 1
 fi
 
-INSTALL_DIR="/usr/local/bin"
-
 ARCH=$(uname -m)
 case $ARCH in
     x86_64) ARCH="amd64";;
@@ -27,12 +26,24 @@ case $ARCH in
 esac
 echo "Architecture: $ARCH"
 
+INSTALL_DIR="/usr/local/bin"
+
 div
 if ! which curl; then
-    log_bad "curl not found."
+    log_bad "curl not found. Please install manually."
     exit 1
 else
     log "Found curl."
+fi
+
+div
+if ! cvenv mmai-test-venv; then
+    rvenv mmai-test-venv || true
+    log_bad "venv creation failed. Please fix before continuing."
+    exit 1
+else
+    rvenv mmai-test-venv
+    log "venv creation works."
 fi
 
 div
