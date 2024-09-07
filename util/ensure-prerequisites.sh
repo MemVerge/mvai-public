@@ -29,7 +29,7 @@ echo "Architecture: $ARCH"
 
 div
 if ! which curl; then
-    log_good "Installing curl..."
+    log_bad "curl not found."
     exit 1
 else
     log "Found curl."
