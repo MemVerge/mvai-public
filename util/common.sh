@@ -1,5 +1,9 @@
 #!/bin/bash
 
+set -euo pipefail
+
+curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/venv.sh
+
 source venv.sh
 
 RELEASE_NAMESPACE='mmcai-system'

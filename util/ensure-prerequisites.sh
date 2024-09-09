@@ -2,6 +2,9 @@
 
 set -euo pipefail
 
+curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/logging.sh
+curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/venv.sh
+
 source logging.sh
 source venv.sh
 
@@ -27,14 +30,6 @@ esac
 echo "Architecture: $ARCH"
 
 INSTALL_DIR="/usr/local/bin"
-
-div
-if ! which curl; then
-    log_bad "curl not found. Please install manually."
-    exit 1
-else
-    log "Found curl."
-fi
 
 div
 if ! cvenv mmai-test-venv; then
