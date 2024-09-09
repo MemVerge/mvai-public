@@ -358,7 +358,7 @@ if $install_nvidia_gpu_operator; then
     helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
     helm repo update
     curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/values/gpu-operator-values.yaml | \
-    helm install --wait -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f -
+    helm install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f -
 fi
 
 if $install_mmcai_cluster; then
