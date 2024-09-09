@@ -1,5 +1,5 @@
 - name: Remove directory on database nodes
-  hosts: mmai_mysql_database
+  hosts: mmai-database
   become: yes
   tasks:
     - name: Ensure directory is removed
