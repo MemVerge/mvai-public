@@ -121,9 +121,9 @@ if $no_mmcai_cluster; then
     if $remove_billing_database; then
         echo "Provide an Ansible inventory containing nodes with billing databases to remove (node group [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP])."
         ANSIBLE_INVENTORY=''
-        until [ -e $ANSIBLE_INVENTORY ]; do
+        until [ -e "$ANSIBLE_INVENTORY" ]; do
             read -p "Ansible inventory: " ANSIBLE_INVENTORY
-            if ! [ -e $ANSIBLE_INVENTORY ]; then
+            if ! [ -e "$ANSIBLE_INVENTORY" ]; then
                 log_bad "Path does not exist."
             fi
         done
