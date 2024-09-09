@@ -175,6 +175,17 @@ chmod +x mmcai-setup.sh
 
 Once deployed, the MMC.AI dashboard should be accessible at `http://<control-plane-ip>:32323`.
 
+# MMC.AI Reset Guide
+
+If the MMC.AI installation is in a bad state, you can perform a full reinstall with the following script. The `ghcr` secret file from above must be provided to the script via the `-f` option.
+
+```bash
+wget -O logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/logging.sh
+wget -O mmcai-reset.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-teardown.sh
+chmod +x mmcai-teardown.sh
+./mmcai-reset.sh -f mmcai-ghcr-secret.yaml
+```
+
 # MMC.AI Teardown Guide
 
 Download and run the interactive `mmcai-teardown.sh` script on the control plane node.
