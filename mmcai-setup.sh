@@ -280,7 +280,9 @@ if $install_mmcai_cluster || $install_kubeflow; then
             MYSQL_ROOT_PASSWORD_CONFIRMATION='nonempty'
             until [ "$MYSQL_ROOT_PASSWORD" = "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; do
                 read -sp "Billing database root password:" MYSQL_ROOT_PASSWORD
+                echo
                 read -sp "Confirm database root password:" MYSQL_ROOT_PASSWORD_CONFIRMATION
+                echo
                 if [ "$MYSQL_ROOT_PASSWORD" != "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; then
                     log_bad "Passwords do not match."
                 fi
