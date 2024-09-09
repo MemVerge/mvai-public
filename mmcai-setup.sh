@@ -233,9 +233,9 @@ fi
 # Get Ansible inventory for components that need it.
 if $install_mmcai_cluster || $install_kubeflow; then
     ANSIBLE_INVENTORY=''
-    until [ -e $ANSIBLE_INVENTORY ]; do
+    until [ -e "$ANSIBLE_INVENTORY" ]; do
         read -p "Ansible inventory: " ANSIBLE_INVENTORY
-        if ! [ -e $ANSIBLE_INVENTORY ]; then
+        if ! [ -e "$ANSIBLE_INVENTORY" ]; then
             log_bad "Path does not exist."
         fi
     done
