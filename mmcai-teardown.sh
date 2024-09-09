@@ -286,7 +286,6 @@ if $remove_billing_database; then
     curl https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/mysql-teardown-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
-    rm mysql-teardown.sh
     kubectl delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
 fi
 
