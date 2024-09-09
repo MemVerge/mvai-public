@@ -1,8 +1,8 @@
-- name: Remove directory on all nodes
+- name: Remove directory on database nodes
   hosts: mmai_mysql_database
   become: yes
   tasks:
     - name: Ensure directory is removed
-      file:
+      ansible.builtin.file:
         path: /mnt/disks/mmai-mysql-billing
         state: absent
