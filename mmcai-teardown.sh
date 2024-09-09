@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-source ensure-prerequisistes.sh
+source ensure-prerequisites.sh
 source common.sh
 source logging.sh
 
