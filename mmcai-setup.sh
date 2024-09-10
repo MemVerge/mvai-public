@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-curl -LfSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/ensure-prerequisites.sh
-curl -LfSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/common.sh
-curl -LfSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
+curl -LfsSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/ensure-prerequisites.sh
+curl -LfsSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/common.sh
+curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
 
 source ensure-prerequisites.sh
 source common.sh
