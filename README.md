@@ -49,7 +49,7 @@ git checkout 23.08
 Once Ansible installation is complete, `deepops/config/inventory` must be configured by the system admin.
 This file defines which hosts will be used for Kubernetes installation.
 
-Within, there are four relevant groups:
+Within, there are four relevant host groups:
 
 - **`[all]`**
   A list of the hosts that will participate in the Kubernetes cluster.
@@ -112,10 +112,13 @@ Copy the `mmcai-ghcr-secret.yaml` file provided by MemVerge to the node with `ku
 kubectl apply -f mmcai-ghcr-secret.yaml
 ```
 
-### Ansible configuraiton
+### Ansible configuration
 
-In an inventory file (which can be named anything), configure the two groups:
+In an inventory file (which can be named anything), configure two host groups:
 - **`[all]`**
+  > **Note:**
+  > The [all] group in this section should be identical to the one in `deepops/config/inventory` if you installed Kubernetes via DeepOps.
+
   A list of the hosts that will participate in the Kubernetes cluster.
   For example:
   ```
@@ -160,9 +163,9 @@ Using this port, the URL `http://<node-ip>:<port>` will fetch the Kubeflow Centr
 
 ## Uninstalling Memory Machine AI
 
-### Ansible configuraiton
+### Ansible configuration
 
-In an inventory file (which can be named anything), configure the group:
+In an inventory file (which can be named anything), configure the host group:
 - **`[mmai_database]`**
   Memory Machine AI MySQL database (single or multiple) nodes. Databases on the specified nodes will be removed.
   For example:
