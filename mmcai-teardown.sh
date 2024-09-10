@@ -10,6 +10,9 @@ source ensure-prerequisites.sh
 source common.sh
 source logging.sh
 
+set_log_directory mmai-teardown-$FILE_TIMESTAMP
+set_log_file mmai-teardown.log
+
 remove_mmcai_cluster=false
 remove_mmcai_manager=false
 remove_cluster_resources=false
@@ -227,7 +230,7 @@ log_good "Beginning teardown..."
 if $remove_mmcai_manager; then
     div
     log_good "Removing MMC.AI Manager..."
-    helm uninstall -n $RELEASE_NAMESPACE mmcai-manager --ignore-not-found
+    helm uninstall -n $RELEASE_NAMESPACE mmcai-manager --ignore-not-found --debug
 fi
 
 if $remove_cluster_resources; then
@@ -280,7 +283,7 @@ if $remove_mmcai_cluster; then
     div
     log_good "Removing MMC.AI Cluster..."
     echo "If you selected to remove cluster resources, disregard below messages that resources are kept due to the resource policy:"
-    helm uninstall -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found
+    helm uninstall -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug
 fi
 
 if $remove_billing_database; then
@@ -312,7 +315,7 @@ if $remove_nvidia_gpu_operator; then
     log_good "Removing NVIDIA GPU Operator..."
     kubectl delete crd nvidiadrivers.nvidia.com --ignore-not-found
     kubectl delete crd clusterpolicies.nvidia.com --ignore-not-found
-    helm uninstall -n gpu-operator nvidia-gpu-operator --ignore-not-found
+    helm uninstall -n gpu-operator nvidia-gpu-operator --ignore-not-found --debug
     kubectl delete namespace gpu-operator --ignore-not-found
 
     # NFD
