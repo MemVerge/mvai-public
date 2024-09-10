@@ -107,7 +107,6 @@ else
 fi
 
 while $be_mmcai_manager && cert_manager_detected && ! kubeflow_detected; do
-    # This is true at least as long as we have the hard-coded deepops@example.com.
     echo "MMC.AI Manager requires Kubeflow, which provides cert-manager. Please uninstall existing cert-manager before continuing if you wish to install MMC.AI Manager."
     read -p "Continue setup [Y/n]:" continue_setup
     case $continue_setup in
@@ -200,7 +199,6 @@ fi
 # Install Kubeflow?
 if ! kubeflow_detected; then
     if $be_mmcai_manager; then
-        # This is true at least as long as we have the hard-coded deepops@example.com.
         echo "Kubeflow is required by MMC.AI Manager. Kubeflow will be installed."
         install_kubeflow=true
     else
@@ -341,19 +339,15 @@ if $install_kubeflow; then
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/sysctl-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
-    log "Cloning Kubeflow manifests..."
-    git clone https://github.com/kubeflow/manifests.git $TEMP_DIR/kubeflow --branch $KUBEFLOW_VERSION
+    build_kubeflow
 
-    ( # Subshell to change directory.
-        cd $TEMP_DIR/kubeflow
-        log "Applying all Kubeflow resources..."
-        while ! kustomize build example | kubectl apply -f -; do
-            log "Kubeflow installation incomplete."
-            log "Waiting 15 seconds before attempt..."
-            sleep 15
-        done
-        log "Kubeflow installed."
-    )
+    log "Applying all Kubeflow resources..."
+    while ! kubectl apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+        log "Kubeflow installation incomplete."
+        log "Waiting 15 seconds before attempt..."
+        sleep 15
+    done
+    log "Kubeflow installed."
 fi
 
 if $install_nvidia_gpu_operator; then

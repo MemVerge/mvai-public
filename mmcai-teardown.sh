@@ -345,23 +345,19 @@ if $remove_kubeflow; then
     div
     log_good "Removing Kubeflow..."
 
-    log "Cloning Kubeflow manifests..."
-    git clone https://github.com/kubeflow/manifests.git $TEMP_DIR/kubeflow --branch $KUBEFLOW_VERSION
+    build_kubeflow
 
-    ( # Subshell to change directory.
-        cd $TEMP_DIR/kubeflow
-        attempts=5
-        log "Deleting all Kubeflow resources..."
+    attempts=5
+    log "Deleting all Kubeflow resources..."
+    log "Attempts remaining: $((attempts))"
+    while [ $attempts -gt 0 ] && ! kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+        attempts=$((attempts - 1))
+        log "Kubeflow removal incomplete."
         log "Attempts remaining: $((attempts))"
-        while [ $attempts -gt 0 ] && ! kustomize build example | kubectl delete --ignore-not-found -f -; do
-            attempts=$((attempts - 1))
-            log "Kubeflow removal incomplete."
-            log "Attempts remaining: $((attempts))"
-            log "Waiting 15 seconds before attempt..."
-            sleep 15
-        done
-        log "Kubeflow removed."
-    )
+        log "Waiting 15 seconds before attempt..."
+        sleep 15
+    done
+    log "Kubeflow removed."
 fi
 
 div
