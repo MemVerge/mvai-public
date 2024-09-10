@@ -2,11 +2,17 @@
 
 set -euo pipefail
 
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
-curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/venv.sh
-
-source logging.sh
-source venv.sh
+imports='
+    logging.sh
+    venv.sh
+'
+for import in $imports; do
+    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/$import; then
+        echo "Error getting script dependency: $import"
+        exit 1
+    fi
+    source $import
+done
 
 OS=windows
 if [[ "$OSTYPE" == linux* ]]; then
@@ -88,4 +94,16 @@ if ! which jq; then
     echo "jq installed to $INSTALL_DIR/jq"
 else
     log "Found jq."
+fi
+
+div
+if ! which yq; then
+    log_good "Installing yq..."
+    YQ_VERSION="v4.44.3"
+
+    sudo curl -Lfo $INSTALL_DIR/yq "https://github.com/mikefarah/yq/releases/download/$YQ_VERSION/yq_$OS_$ARCH"
+    sudo chmod +x /usr/local/bin/yq
+    echo "yq installed to $INSTALL_DIR/yq"
+else
+    log "Found yq."
 fi

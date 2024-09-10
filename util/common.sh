@@ -1,15 +1,5 @@
 #!/bin/bash
 
-set -euo pipefail
-
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
-curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/venv.sh
-
-source logging.sh
-source venv.sh
-
-FILE_TIMESTAMP=$(file_timestamp)
-
 RELEASE_NAMESPACE='mmcai-system'
 MMCLOUD_OPERATOR_NAMESPACE='mmcloud-operator-system'
 PROMETHEUS_NAMESPACE='monitoring'
@@ -24,34 +14,36 @@ ANSIBLE_INVENTORY_DATABASE_NODE_GROUP='mmai_database'
 
 KUBEFLOW_MANIFEST='kubeflow-manifest.yaml'
 
-TEMP_DIR=$(mktemp -d)
-
-cleanup() {
-    dvenv || true
-    rm -rf $TEMP_DIR
-    exit
+ensure_prerequisites() {
+    local script='ensure-prerequisites.sh'
+    if ! curl -LfsSo $script https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/$script; then
+        echo "Error getting script: $script"
+        return 1
+    fi
+    ./$script
 }
 
-trap cleanup EXIT
-
-cvenv $ANSIBLE_VENV || true
-avenv $ANSIBLE_VENV
-pip install -q ansible
-
 build_kubeflow() {
-    log "Cloning Kubeflow manifests..."
-    git clone https://github.com/kubeflow/manifests.git $TEMP_DIR/kubeflow --branch $KUBEFLOW_VERSION
+    local base_dir
+    if (( $# == 1 )) && [[ "$1" != "" ]] && [[ -d "$1" ]]; then
+        # Use the specified log file.
+        base_dir=$1
+    else
+        return 1
+    fi
+
+    git clone https://github.com/kubeflow/manifests.git $base_dir/kubeflow --branch $KUBEFLOW_VERSION
 
     # From DeepOps: Change the default Istio Ingress Gateway configuration to support NodePort for ease-of-use in on-prem
     path_istio_version=${KUBEFLOW_ISTIO_VERSION#v}
     path_istio_version=${path_istio_version//./-}
-    sed -i 's:ClusterIP:NodePort:g' "$TEMP_DIR/kubeflow/common/istio-$path_istio_version/istio-install/base/patches/service.yaml"
+    sed -i 's:ClusterIP:NodePort:g' "$base_dir/kubeflow/common/istio-$path_istio_version/istio-install/base/patches/service.yaml"
 
     # From DeepOps: Make the Kubeflow cluster allow insecure http instead of https
     # https://github.com/kubeflow/manifests#connect-to-your-kubeflow-cluster
-    sed -i 's:JWA_APP_SECURE_COOKIES=true:JWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/kubeflow/apps/jupyter/jupyter-web-app/upstream/base/params.env"
-    sed -i 's:VWA_APP_SECURE_COOKIES=true:VWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/kubeflow/apps/volumes-web-app/upstream/base/params.env"
-    sed -i 's:TWA_APP_SECURE_COOKIES=true:TWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/kubeflow/apps/tensorboard/tensorboards-web-app/upstream/base/params.env"
+    sed -i 's:JWA_APP_SECURE_COOKIES=true:JWA_APP_SECURE_COOKIES=false:' "$base_dir/kubeflow/apps/jupyter/jupyter-web-app/upstream/base/params.env"
+    sed -i 's:VWA_APP_SECURE_COOKIES=true:VWA_APP_SECURE_COOKIES=false:' "$base_dir/kubeflow/apps/volumes-web-app/upstream/base/params.env"
+    sed -i 's:TWA_APP_SECURE_COOKIES=true:TWA_APP_SECURE_COOKIES=false:' "$base_dir/kubeflow/apps/tensorboard/tensorboards-web-app/upstream/base/params.env"
 
-    kustomize build $TEMP_DIR/kubeflow/example > $TEMP_DIR/$KUBEFLOW_MANIFEST
+    kustomize build $base_dir/kubeflow/example > $base_dir/$KUBEFLOW_MANIFEST
 }
