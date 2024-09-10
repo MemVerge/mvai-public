@@ -10,6 +10,9 @@ source ensure-prerequisites.sh
 source common.sh
 source logging.sh
 
+set_log_directory mmai-setup-$FILE_TIMESTAMP
+set_log_file mmai-setup.log
+
 install_mmcai_manager=false
 install_mmcai_cluster=false
 install_nvidia_gpu_operator=false
@@ -19,12 +22,12 @@ install_cert_manager=false # Allow instead of kubeflow if not installing mmcai-m
 confirm_selection=false
 
 # Sanity check.
-log "Getting version to check connectivity."
+log "Getting Kubernetes version to check connectivity."
 if ! kubectl version; then
-    log_bad "Cannot proceed with setup."
+    log_bad "Error getting version. Cannot proceed with setup."
     exit 1
 else
-    log_good "Proceeding with setup."
+    log_good "Got version successfully. Proceeding with setup."
 fi
 
 if kubectl get secret -n $RELEASE_NAMESPACE memverge-dockerconfig; then
@@ -336,7 +339,8 @@ if $install_cert_manager; then
     helm repo add jetstack https://charts.jetstack.io
     helm repo update
     helm install --wait --create-namespace -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
-      --set crds.enabled=true
+      --set crds.enabled=true \
+      --debug
 fi
 
 if $install_kubeflow; then
@@ -363,7 +367,7 @@ if $install_nvidia_gpu_operator; then
     helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
     helm repo update
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/values/gpu-operator-values.yaml | \
-    helm install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f -
+    helm install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f - --debug
 fi
 
 if $install_mmcai_cluster; then
@@ -390,11 +394,12 @@ if $install_mmcai_cluster; then
     fi
 
     helm install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster \
-        --set billing.database.nodeHostname=$MYSQL_NODE_HOSTNAME
+        --set billing.database.nodeHostname=$MYSQL_NODE_HOSTNAME \
+        --debug
 fi
 
 if $install_mmcai_manager; then
     div
     log_good "Installing MMC.AI Manager..."
-    helm install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager
+    helm install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --debug
 fi

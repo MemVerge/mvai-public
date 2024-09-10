@@ -8,6 +8,8 @@ curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main
 source logging.sh
 source venv.sh
 
+FILE_TIMESTAMP=$(file_timestamp)
+
 RELEASE_NAMESPACE='mmcai-system'
 MMCLOUD_OPERATOR_NAMESPACE='mmcloud-operator-system'
 PROMETHEUS_NAMESPACE='monitoring'
