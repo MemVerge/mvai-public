@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/logging.sh
-curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/venv.sh
+curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
+curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/venv.sh
 
 source logging.sh
 source venv.sh
@@ -63,7 +63,7 @@ fi
 div
 if ! which helm; then
     log_good "Installing Helm..."
-    curl -Lf "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3" | bash
+    curl -Lf "https://raw.githubusercontent.com/helm/helm/better-logging/scripts/get-helm-3" | bash
 else
     log "Found Helm."
 fi

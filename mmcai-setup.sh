@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-curl -LfsSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/ensure-prerequisites.sh
-curl -LfsSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/common.sh
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/logging.sh
+curl -LfSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/ensure-prerequisites.sh
+curl -LfSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/common.sh
+curl -LfSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
 
 source ensure-prerequisites.sh
 source common.sh
@@ -347,7 +347,7 @@ if $install_kubeflow; then
     div
     log_good "Installing Kubeflow..."
 
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/sysctl-playbook.yaml | \
+    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/playbooks/sysctl-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
     build_kubeflow
@@ -366,7 +366,7 @@ if $install_nvidia_gpu_operator; then
     log_good "Installing NVIDIA GPU Operator..."
     helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
     helm repo update
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/values/gpu-operator-values.yaml | \
+    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/values/gpu-operator-values.yaml | \
     helm install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f - --debug
 fi
 
@@ -374,7 +374,7 @@ if $install_mmcai_cluster; then
     div
     log_good "Installing MMC.AI Cluster..."
 
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/mysql-setup-playbook.yaml | \
+    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/playbooks/mysql-setup-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
     # Create namespaces
