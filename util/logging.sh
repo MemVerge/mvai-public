@@ -1,7 +1,5 @@
 #!/bin/bash
 
-PYTHON=$(which python3 || which python)
-
 echo_green() {
   local lightgreen='\033[1;32m'
   local nocolor='\033[0m'
@@ -15,11 +13,13 @@ echo_red() {
 }
 
 file_timestamp() {
-  $PYTHON -c "from datetime import datetime; print(datetime.now().strftime('%Y%m%d-%H%M%S%f'))"
+  local python=$(which python3 || which python)
+  $python -c "from datetime import datetime; print(datetime.now().strftime('%Y%m%d-%H%M%S%f'))"
 }
 
 log_timestamp() {
-  $PYTHON -c "from datetime import datetime; print(datetime.now().isoformat(timespec='microseconds'))"
+  local python=$(which python3 || which python)
+  $python -c "from datetime import datetime; print(datetime.now().isoformat(timespec='microseconds'))"
 }
 
 log_good() {
@@ -41,25 +41,16 @@ div() {
   echo "---"
 }
 
-set_log_directory() {
-  if (( $# == 1 )) && [[ $1 != "" ]]; then
-    # Use the specified log file.
-    LOG_DIRECTORY=$1
-  else
-    LOG_DIRECTORY=$(pwd)
-  fi
-}
-
 set_log_file() {
-  local LOG_FILE
-  if (( $# == 1 )) && [[ $1 != "" ]]; then
+  local log_file
+  if (( $# == 1 )) && [[ "$1" != "" ]]; then
     # Use the specified log file.
-    LOG_FILE=$1
+    log_file="$1"
   else
     return 1
   fi
-  # Capture STDOUT and STDERR to a log file, and display to the terminal
-  exec &> >(tee -a "$LOG_DIRECTORY/$LOG_FILE")
+  # Capture STDOUT and STDERR to a log file, and display to the terminal.
+  exec &> >(tee -a "$log_file")
 }
 
 unset_log_file() {

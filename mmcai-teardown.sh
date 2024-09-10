@@ -2,16 +2,38 @@
 
 set -euo pipefail
 
-curl -LfsSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/ensure-prerequisites.sh
-curl -LfsSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/common.sh
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
+imports='
+    common.sh
+    logging.sh
+    venv.sh
+'
+for import in $imports; do
+    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/$import; then
+        echo "Error getting script dependency: $import"
+        exit 1
+    fi
+    source $import
+done
 
-source ensure-prerequisites.sh
-source common.sh
-source logging.sh
+ensure_prerequisites
 
-set_log_directory mmai-teardown-$FILE_TIMESTAMP
-set_log_file mmai-teardown.log
+MMAI_TEARDOWN_LOG_DIR="mmai-teardown-$(file_timestamp)"
+mkdir -p $MMAI_TEARDOWN_LOG_DIR
+set_log_file "$MMAI_TEARDOWN_LOG_DIR/mmai-teardown.log"
+
+TEMP_DIR=$(mktemp -d)
+cleanup() {
+    dvenv || true
+    rm -rf $TEMP_DIR
+    exit
+}
+trap cleanup EXIT
+
+cvenv $ANSIBLE_VENV || true
+avenv $ANSIBLE_VENV
+pip install -q ansible
+
+################################################################################
 
 remove_mmcai_cluster=false
 remove_mmcai_manager=false
@@ -348,7 +370,7 @@ if $remove_kubeflow; then
     div
     log_good "Removing Kubeflow..."
 
-    build_kubeflow
+    build_kubeflow $TEMP_DIR
 
     attempts=5
     log "Deleting all Kubeflow resources..."

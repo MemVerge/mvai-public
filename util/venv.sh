@@ -1,14 +1,13 @@
 #!/bin/bash
 
-PYTHON=$(which python3 || which python)
-
-VENV_DIR=".mmai-venvs"
+MMAI_VENV_DIR=".mmai-venvs"
 
 cvenv() {
   if (( $# == 1 )); then
-    venvpath=$VENV_DIR/$1
+    venvpath=$MMAI_VENV_DIR/$1
     if [[ ! -d $venvpath && ! -f $venvpath ]]; then
-      $PYTHON -m venv $venvpath
+      local python=$(which python3 || which python)
+      $python -m venv $venvpath
     else
       echo "Cannot create venv: name already exists"
       return 1
@@ -21,7 +20,7 @@ cvenv() {
 
 avenv() {
   if (( $# == 1 )); then
-    activatevenvpath=$VENV_DIR/$1/bin/activate
+    activatevenvpath=$MMAI_VENV_DIR/$1/bin/activate
     if [[ -f $activatevenvpath ]]; then
       source $activatevenvpath
     else
@@ -35,7 +34,7 @@ avenv() {
 }
 
 lvenv() {
-  ls $VENV_DIR
+  ls $MMAI_VENV_DIR
 }
 
 dvenv() {
@@ -44,7 +43,7 @@ dvenv() {
 
 rvenv() {
   if (( $# == 1 )); then
-    venvpath=$VENV_DIR/$1
+    venvpath=$MMAI_VENV_DIR/$1
     if [[ -d $venvpath ]]; then
       rm -rf $venvpath
     else

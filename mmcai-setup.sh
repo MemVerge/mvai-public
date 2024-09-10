@@ -2,16 +2,38 @@
 
 set -euo pipefail
 
-curl -LfsSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/ensure-prerequisites.sh
-curl -LfsSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/common.sh
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
+imports='
+    common.sh
+    logging.sh
+    venv.sh
+'
+for import in $imports; do
+    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/$import; then
+        echo "Error getting script dependency: $import"
+        exit 1
+    fi
+    source $import
+done
 
-source ensure-prerequisites.sh
-source common.sh
-source logging.sh
+ensure_prerequisites
 
-set_log_directory mmai-setup-$FILE_TIMESTAMP
-set_log_file mmai-setup.log
+MMAI_SETUP_LOG_DIR="mmai-setup-$(file_timestamp)"
+mkdir -p $MMAI_SETUP_LOG_DIR
+set_log_file "$MMAI_SETUP_LOG_DIR/mmai-setup.log"
+
+TEMP_DIR=$(mktemp -d)
+cleanup() {
+    dvenv || true
+    rm -rf $TEMP_DIR
+    exit
+}
+trap cleanup EXIT
+
+cvenv $ANSIBLE_VENV || true
+avenv $ANSIBLE_VENV
+pip install -q ansible
+
+################################################################################
 
 install_mmcai_manager=false
 install_mmcai_cluster=false
@@ -350,7 +372,7 @@ if $install_kubeflow; then
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/playbooks/sysctl-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
-    build_kubeflow
+    build_kubeflow $TEMP_DIR
 
     log "Applying all Kubeflow resources..."
     while ! kubectl apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
