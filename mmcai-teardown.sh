@@ -2,9 +2,9 @@
 
 set -euo pipefail
 
-curl -LfsSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/ensure-prerequisites.sh
-curl -LfsSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/common.sh
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/logging.sh
+curl -LfsSo ensure-prerequisites.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/ensure-prerequisites.sh
+curl -LfsSo common.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/common.sh
+curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
 
 source ensure-prerequisites.sh
 source common.sh
@@ -290,7 +290,7 @@ if $remove_billing_database; then
     div
     log_good "Removing billing database..."
 
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/playbooks/mysql-teardown-playbook.yaml | \
+    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/playbooks/mysql-teardown-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
     kubectl delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found

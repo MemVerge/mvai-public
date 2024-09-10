@@ -2,8 +2,8 @@
 
 set -euo pipefail
 
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/logging.sh
-curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/venv.sh
+curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/logging.sh
+curl -LfsSo venv.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/venv.sh
 
 source logging.sh
 source venv.sh
