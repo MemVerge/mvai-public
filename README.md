@@ -156,18 +156,6 @@ echo $(kubectl get svc istio-ingressgateway -n istio-system -o jsonpath='{.spec.
 
 Using this port, the URL `http://<node-ip>:<port>` will fetch the Kubeflow Central Dashboard, where `<node-ip>` is the IPv4 address of any node on the cluster.
 
-# Memory Machine AI Reset Guide
-
-## Resetting Memory Machine AI
-
-If the Memory Machine AI installation is in a bad state, you can perform a full reinstall with the following script. The `ghcr` secret file from above must be provided to the script via the `-f` option.
-
-```bash
-curl -Lfo mmcai-reset.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-reset.sh
-chmod +x mmcai-reset.sh
-./mmcai-reset.sh -f mmcai-ghcr-secret.yaml
-```
-
 # Memory Machine AI Teardown Guide
 
 ## Uninstalling Memory Machine AI
