@@ -123,7 +123,7 @@ if $no_mmcai_cluster; then
         * ) remove_billing_database=false;;
     esac
     if $remove_billing_database; then
-        echo "Provide an Ansible inventory containing nodes with billing databases to remove (node group [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP])."
+        echo "Provide an Ansible inventory of nodes (Ansible host group [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP]) to remove billing databases from."
         ANSIBLE_INVENTORY=''
         until [ -e "$ANSIBLE_INVENTORY" ]; do
             read -p "Ansible inventory: " ANSIBLE_INVENTORY

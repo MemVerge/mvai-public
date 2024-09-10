@@ -236,6 +236,13 @@ fi
 if $install_mmcai_cluster || $install_kubeflow; then
     ANSIBLE_INVENTORY=''
     until [ -e "$ANSIBLE_INVENTORY" ]; do
+        echo "Provide an Ansible inventory with the following Ansible host groups:"
+        if $install_kubeflow; then
+            echo "- [all] (used if installing Kubeflow)"
+        fi
+        if $install_mmcai_cluster; then
+            echo "- [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP] (used if installing MMC.AI Cluster)"
+        fi
         read -p "Ansible inventory: " ANSIBLE_INVENTORY
         if ! [ -e "$ANSIBLE_INVENTORY" ]; then
             log_bad "Path does not exist."
