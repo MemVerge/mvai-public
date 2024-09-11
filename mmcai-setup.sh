@@ -10,6 +10,48 @@ div
 
 NAMESPACE="mmcai-system"
 
+SECRET_YAML="mmcai-ghcr-secret.yaml"
+
+function usage () {
+    div
+    echo "$0 [-f yaml]: set up MMC.AI"
+    echo "-f: takes a path to ${SECRET_YAML}."
+    div
+}
+
+while getopts "f:" opt; do
+  case $opt in
+    f)
+        MMCAI_GHCR_SECRET="$OPTARG"
+        ;;
+    \?)
+        div
+        log_bad "Invalid option: -$OPTARG" >&2
+        usage
+        exit 1
+        ;;
+    :)
+        div
+        log_bad "Option -$OPTARG requires an argument." >&2
+        usage
+        exit 1
+        ;;
+  esac
+done
+
+if ls ${SECRET_YAML}; then
+    div
+    log_good "Found ${SECRET_YAML} in the current directory; will use it to set up MMC.AI."
+    MMCAI_GHCR_SECRET=$(pwd)/${SECRET_YAML}
+else
+    # No local secret and no OPTARG; exit
+    if [ -z "$MMCAI_GHCR_SECRET" ]; then
+        log_bad "Please provide a path to ${SECRET_YAML}."
+        usage
+        exit 1
+    fi
+fi
+
 div
 log_good "Please provide information for billing database:"
 div
@@ -48,10 +90,10 @@ function helm_login() {
         log_good "Helm login was successful."
     else
         div
-        log_bad "Helm login was unsuccessful. Please provide an mmcai-ghcr-secret.yaml that allows helm login."
+        log_bad "Helm login was unsuccessful. Please provide an ${SECRET_YAML} that allows helm login."
         div
         log "Report:"
-        cat mmcai-ghcr-secret.yaml
+        cat ${SECRET_YAML}
         div
         exit 1
     fi
@@ -65,7 +107,7 @@ function determine_install_type() {
         rm mmcai-cluster*
 
         div
-        log_good "Your mmcai-ghcr-secret.yaml allows you to pull internal images."
+        log_good "Your ${SECRET_YAML} allows you to pull internal images."
         
         read -p "Would you like to install internal builds on your cluster? [Y/n]:" install_internal
         case $install_internal in
@@ -79,11 +121,11 @@ function determine_install_type() {
     fi
 
     div
-    log "Based on mmcai-ghcr-secret.yaml credentials, will install from $install_repository"
+    log "Based on ${SECRET_YAML} credentials, will install from $install_repository."
 }
 
-if [[ -f "mmcai-ghcr-secret.yaml" ]]; then
-    kubectl apply -f mmcai-ghcr-secret.yaml
+if [[ -f "${MMCAI_GHCR_SECRET}" ]]; then
+    kubectl apply -f ${MMCAI_GHCR_SECRET}
     helm_login
     determine_install_type
 else
