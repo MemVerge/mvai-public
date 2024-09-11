@@ -9,13 +9,15 @@ log "Welcome to MMC.AI setup!"
 div
 
 NAMESPACE="mmcai-system"
-
 SECRET_YAML="mmcai-ghcr-secret.yaml"
+SECRET_INTERNAL_YAML="mmcai-ghcr-secret-internal.yaml"
 
 function usage () {
     div
-    echo "$0 [-f yaml]: set up MMC.AI"
+    echo "$0 [-f yaml]: MMC.AI setup wizard."
     echo "-f: takes a path to ${SECRET_YAML}."
+    echo "    By default, the script checks if ${SECRET_YAML} exists in the current directory."
+    echo "    If not, then this argument must be provided."
     div
 }
 
@@ -39,18 +41,24 @@ while getopts "f:" opt; do
   esac
 done
 
-if ls ${SECRET_YAML}; then
-    div
-    log_good "Found ${SECRET_YAML} in the current directory; will use it to set up MMC.AI."
+# First check for mmcai-ghcr-secret-internal.yaml.
+# If that is present, pull it; if not, check without -internal.
+if ls ${SECRET_INTERNAL_YAML}-internal; then
+    MMCAI_GHCR_SECRET=$(pwd)/${SECRET_INTERNAL_YAML}
+elif ls ${SECRET_YAML}; then
     MMCAI_GHCR_SECRET=$(pwd)/${SECRET_YAML}
 else
     # No local secret and no OPTARG; exit
     if [ -z "$MMCAI_GHCR_SECRET" ]; then
+        div
         log_bad "Please provide a path to ${SECRET_YAML}."
         usage
         exit 1
     fi
 fi
+
+div
+log_good "Will set up MMC.AI using ${MMCAI_GHCR_SECRET}."
 
 div
 log_good "Please provide information for billing database:"
@@ -154,9 +162,9 @@ div
 log_good "Installing charts..."
 div
 
-## install mmc.ai system
+## install latest mmc.ai system
 helm install --debug -n $NAMESPACE mmcai-cluster ${install_repository}/mmcai-cluster \
     --set billing.database.nodeHostname=$mysql_node_hostname
 
-## install mmc.ai management
+## install latest mmc.ai management
 helm install --debug -n $NAMESPACE mmcai-manager ${install_repository}/mmcai-manager
