@@ -1,5 +1,20 @@
 #!/bin/bash
 
+set -uo pipefail
+
+ignore_errors=false
+
+while getopts "i" option; do
+    case $option in
+        i ) ignore_errors=true;;
+        * ) echo "Invalid option. Use -i to ignore errors."
+    esac
+done
+
+if ! $ignore_errors; then
+    set -e
+fi
+
 # set -euo pipefail
 
 source logging.sh
@@ -235,20 +250,38 @@ if $remove_cluster_resources; then
         departments.mmc.ai
     '
 
+    log "Requesting CRD deletion..."
     kubectl delete crd $cluster_resource_crds --ignore-not-found &
     cluster_resource_crds_removed=$!
 
     if $force_if_remove_cluster_resources; then
+        log "Force removing cluster resources..."
         for cluster_resource_crd in $cluster_resource_crds; do
-            until [ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]; do
+            log "Removing $cluster_resource_crds resources..."
+
+            if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
+                error_or_found=true
+            elif [ -z "$get_crd_output" ]; then
+                error_or_found=false
+            else
+                error_or_found=true
+            fi
+
+            while $error_or_found; do
                 namespaces=$(kubectl get namespaces -o custom-columns=:.metadata.name)
                 for namespace in $namespaces; do
-                    if [ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]; then
-                        break
-                    fi
-                    resources=$(kubectl get -n $namespace $cluster_resource_crd -o custom-columns=:.metadata.name)
-                    if ! [ -z "$resources" ]; then
-                        kubectl patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]'
+                    if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
+                        error_or_found=true
+                    elif [ -z "$get_crd_output" ]; then
+                        error_or_found=false
+                    else
+                        error_or_found=true
+                        # This should work for cluster-wide resources.
+                        if ! resources=$(kubectl get -n $namespace $cluster_resource_crd -o custom-columns=:.metadata.name); then
+                            continue
+                        elif ! [ -z "$resources" ]; then
+                            kubectl patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]' || true
+                        fi
                     fi
                 done
             done
@@ -265,7 +298,9 @@ if $remove_cluster_resources; then
     wait $cluster_resource_crds_removed
 
     for cluster_resource_crd in $cluster_resource_crds; do
-        if ! [ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]; then
+        if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
+            log_bad "CRD $cluster_resource_crd may not have been removed successfully."
+        elif ! [ -z "$get_crd_output" ]; then
             log_bad "CRD $cluster_resource_crd was not removed successfully."
         fi
     done
@@ -315,10 +350,9 @@ if $remove_nvidia_gpu_operator; then
     # NVIDIA GPU Operator Helm chart does not create an instance of this CRD so the CRD can be deleted first.
     kubectl delete crd nvidiadrivers.nvidia.com --ignore-not-found
 
-    if kubectl get crd clusterpolicies.nvidia.com; then
-        cluster_policies=$(kubectl get clusterpolicies -o custom-columns=:.metadata.name)
-    fi
-    if ! [ -z "$cluster_policies" ]; then
+    if cluster_policies=$(kubectl get clusterpolicies -o custom-columns=:.metadata.name) \
+    && ! [ -z "$cluster_policies" ]
+    then
         kubectl delete clusterpolicies $cluster_policies --ignore-not-found
     fi
 
