@@ -15,8 +15,6 @@ if ! $ignore_errors; then
     set -e
 fi
 
-# set -euo pipefail
-
 source logging.sh
 
 remove_mmcai_cluster=false
