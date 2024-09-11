@@ -293,7 +293,9 @@ if $remove_cluster_resources; then
         kubectl label nodes --all ${label}-
     done
 
-    wait $cluster_resource_crds_removed
+    if ! wait $cluster_resource_crds_removed; then
+        log_bad "Cluster resources may not have been removed successfully."
+    fi
 
     for cluster_resource_crd in $cluster_resource_crds; do
         if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
@@ -351,7 +353,9 @@ if $remove_nvidia_gpu_operator; then
     if cluster_policies=$(kubectl get clusterpolicies -o custom-columns=:.metadata.name) \
     && ! [ -z "$cluster_policies" ]
     then
-        kubectl delete clusterpolicies $cluster_policies --ignore-not-found
+        if ! kubectl delete clusterpolicies $cluster_policies --ignore-not-found; then
+            log_bad "NVIDIA cluster policies may not have been removed successfully."
+        fi
     fi
 
     helm uninstall --debug -n gpu-operator nvidia-gpu-operator --ignore-not-found
