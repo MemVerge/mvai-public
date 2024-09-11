@@ -31,6 +31,17 @@ KUBEFLOW_VERSION='v1.9.0'
 KUBEFLOW_ISTIO_VERSION='1.22'
 KUBEFLOW_MANIFEST='kubeflow-manifest.yaml'
 
+namespaces='
+    kubeflow
+    knative-eventing
+    knative-serving
+'
+
+echo "Deleting all objects in namespaces:" $namespaces
+kubectl delete namespace $namespaces --ignore-not-found
+
+################################################################################
+
 log "Cloning Kubeflow manifests..."
 git clone https://github.com/kubeflow/manifests.git $TEMP_DIR/kubeflow --branch $KUBEFLOW_VERSION
 
