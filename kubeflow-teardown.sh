@@ -31,17 +31,6 @@ KUBEFLOW_VERSION='v1.9.0'
 KUBEFLOW_ISTIO_VERSION='1.22'
 KUBEFLOW_MANIFEST='kubeflow-manifest.yaml'
 
-namespaces='
-    kubeflow
-    knative-eventing
-    knative-serving
-'
-
-echo "Deleting all objects in namespaces:" $namespaces
-kubectl delete namespace $namespaces --ignore-not-found
-
-################################################################################
-
 log "Cloning Kubeflow manifests..."
 git clone https://github.com/kubeflow/manifests.git $TEMP_DIR/kubeflow --branch $KUBEFLOW_VERSION
 
@@ -61,7 +50,9 @@ kustomize build $TEMP_DIR/kubeflow/example > $TEMP_DIR/$KUBEFLOW_MANIFEST
 attempts=5
 log "Deleting all Kubeflow resources..."
 log "Attempts remaining: $((attempts))"
-while [ $attempts -gt 0 ] && ! kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+
+exec &> >(tee -a "edwin-$(date +"%Y-%m-%dT%H-%M-%S").log")
+while [ $attempts -gt 0 ] && ! kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST -v=6; do
     attempts=$((attempts - 1))
     log "Kubeflow removal incomplete."
     log "Attempts remaining: $((attempts))"
