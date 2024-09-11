@@ -357,7 +357,7 @@ fi
 if $remove_kubeflow; then
     div
     log_good "Removing Kubeflow..."
-    wget -O kubeflow-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/kubeflow-teardown.sh
+    wget -O kubeflow-teardown.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/maybe-fix-kf-delete/kubeflow-teardown.sh
     chmod +x kubeflow-teardown.sh
     ./kubeflow-teardown.sh
     rm kubeflow-teardown.sh
