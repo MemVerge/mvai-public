@@ -6,6 +6,8 @@ TEMP_DIR=$(mktemp -d)
 
 cleanup() {
     rm -rf $TEMP_DIR
+    sudo rm -rf /usr/local/bin/kustomize
+    trap - EXIT
     exit
 }
 
@@ -13,8 +15,21 @@ trap cleanup EXIT
 
 div
 log "Welcome to the MMC.AI Kubeflow installer!"
-log "First, setting sysctl variables across all hosts..."
+log "Installing kustomize..."
 div
+
+wget -O install_kustomize.sh "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh"
+chmod +x install_kustomize.sh
+./install_kustomize.sh
+
+sudo chmod 755 kustomize
+
+sudo cp kustomize /usr/local/bin
+
+rm -rf kustomize
+rm -rf install_kustomize.sh
+
+log "Setting sysctl variables across all hosts..."
 
 cat > sysctl-playbook.yaml <<EOF
 ---
@@ -92,7 +107,7 @@ sed -i 's:JWA_APP_SECURE_COOKIES=true:JWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/
 sed -i 's:VWA_APP_SECURE_COOKIES=true:VWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/kubeflow/apps/volumes-web-app/upstream/base/params.env"
 sed -i 's:TWA_APP_SECURE_COOKIES=true:TWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/kubeflow/apps/tensorboard/tensorboards-web-app/upstream/base/params.env"
 
-kustomize build $TEMP_DIR/kubeflow/example > $TEMP_DIR/$KUBEFLOW_MANIFEST
+${KUSTOMIZE} build $TEMP_DIR/kubeflow/example > $TEMP_DIR/$KUBEFLOW_MANIFEST
 
 log "Applying all Kubeflow resources..."
 while ! kubectl apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do

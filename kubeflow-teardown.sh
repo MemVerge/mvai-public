@@ -6,6 +6,8 @@ TEMP_DIR=$(mktemp -d)
 
 cleanup() {
     rm -rf $TEMP_DIR
+    sudo rm -rf /usr/local/bin/kustomize
+    trap - EXIT
     exit
 }
 
