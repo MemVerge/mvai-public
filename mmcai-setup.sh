@@ -117,7 +117,7 @@ function helm_login() {
     secret_token=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".password')
 
     # Attempt login
-    if helm registry login ghcr.io/memverge -u $secret_user -p $secret_token; then
+    if echo $secret_token | helm registry login ghcr.io/memverge -u $secret_user --password-stdin; then
         div
         log_good "Helm login was successful."
     else
@@ -131,13 +131,22 @@ function helm_login() {
     fi
 }
 
+function helm_poke() {
+    attempts=3
+    until helm pull --devel $1 2>&1 > /dev/null; do
+        if [ $attempts -eq 0 ]; then
+            return 1
+        fi
+        attempts=$((attempts - 1))
+    done
+    return 0
+}
+
 function determine_install_type() {
     # mmcai-ghcr-secret may allow user to pull internal charts.
     # If so, ask user if they want to pull internal or external.
-    helm pull oci://ghcr.io/memverge/charts/internal/mmcai-cluster --devel
-    if ls mmcai-cluster* > /dev/null 2>&1; then
-        rm mmcai-cluster*
-
+    if helm_poke oci://ghcr.io/memverge/charts/internal/mmcai-manager; then
+        rm mmcai-manager*
         div
         log_good "Your ${SECRET_YAML} allows you to pull internal images."
         log_good "Would you like to install internal builds on your cluster? [Y/n]:"
@@ -147,10 +156,21 @@ function determine_install_type() {
             [Nn]* ) install_internal=false;;
             * ) install_internal=true;;
         esac
+    elif helm_poke oci://ghcr.io/memverge/charts/mmcai-manager; then
+        rm mmcai-manager*
+        div
+        log_good "Your ${SECRET_YAML} allows you to pull customer images."
+    else
+        div
+        log_bad "Your ${SECRET_YAML} does not allow you to pull images. Please contact MemVerge customer support."
+        exit 1
     fi
+
+    install_flags="--debug"
 
     if $install_internal; then
         install_repository="oci://ghcr.io/memverge/charts/internal"
+        install_flags="--debug --devel"
     fi
 
     div
@@ -188,8 +208,8 @@ log_good "Installing charts..."
 div
 
 ## install latest mmc.ai system
-helm install --debug -n $NAMESPACE mmcai-cluster ${install_repository}/mmcai-cluster \
+helm install $install_flags -n $NAMESPACE mmcai-cluster ${install_repository}/mmcai-cluster \
     --set billing.database.nodeHostname=$mysql_node_hostname
 
 ## install latest mmc.ai management
-helm install --debug -n $NAMESPACE mmcai-manager ${install_repository}/mmcai-manager
+helm install $install_flags -n $NAMESPACE mmcai-manager ${install_repository}/mmcai-manager
