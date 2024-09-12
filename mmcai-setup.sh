@@ -43,9 +43,9 @@ done
 
 # First check for mmcai-ghcr-secret-internal.yaml.
 # If that is present, pull it; if not, check without -internal.
-if ls ${SECRET_INTERNAL_YAML}-internal; then
+if [ -f ${SECRET_INTERNAL_YAML} ]; then
     MMCAI_GHCR_SECRET=$(pwd)/${SECRET_INTERNAL_YAML}
-elif ls ${SECRET_YAML}; then
+elif [ -f ${SECRET_YAML} ]; then
     MMCAI_GHCR_SECRET=$(pwd)/${SECRET_YAML}
 else
     # No local secret and no OPTARG; exit
@@ -58,12 +58,22 @@ else
 fi
 
 div
-log_good "Will set up MMC.AI using ${MMCAI_GHCR_SECRET}."
+log_good "Found image pull secret ${MMCAI_GHCR_SECRET}."
+log_good "Do you want to use these credentials to set up MMC.AI? [Y/n]"
+read -p "" $continue
+case $continue in
+    Nn)
+        log_good "Exiting setup..."
+        sleep 1
+        exit 0
+        ;;
+    *)
+        log_good "Continuing setup with credentials in ${MMCAI_GHCR_SECRET}..."
+        ;;
+esac
 
 div
 log_good "Please provide information for billing database:"
-div
-
 read -p "MySQL database node hostname: " mysql_node_hostname
 read -sp "MySQL root password: " MYSQL_ROOT_PASSWORD
 echo ""
@@ -93,7 +103,7 @@ function helm_login() {
     secret_token=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".password')
 
     # Attempt login
-    if helm login ghcr.io/memverge -u $secret_user -p $secret_token; then
+    if helm registry login ghcr.io/memverge -u $secret_user -p $secret_token; then
         div
         log_good "Helm login was successful."
     else
@@ -116,8 +126,9 @@ function determine_install_type() {
 
         div
         log_good "Your ${SECRET_YAML} allows you to pull internal images."
+        log_good "Would you like to install internal builds on your cluster? [Y/n]:"
         
-        read -p "Would you like to install internal builds on your cluster? [Y/n]:" install_internal
+        read -p "" install_internal
         case $install_internal in
             [Nn]* ) install_internal=false;;
             * ) install_internal=true;;
