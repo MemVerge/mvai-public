@@ -47,30 +47,12 @@ sed -i 's:VWA_APP_SECURE_COOKIES=true:VWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/
 sed -i 's:TWA_APP_SECURE_COOKIES=true:TWA_APP_SECURE_COOKIES=false:' "$TEMP_DIR/kubeflow/apps/tensorboard/tensorboards-web-app/upstream/base/params.env"
 
 kustomize build $TEMP_DIR/kubeflow/example > $TEMP_DIR/$KUBEFLOW_MANIFEST
-mkdir -p $TEMP_DIR/$KUBEFLOW_DOCUMENTS_DIRECTORY
-( # Subshell to change directory.
-    cd $TEMP_DIR/$KUBEFLOW_DOCUMENTS_DIRECTORY
-    yq e '{"apiVersion": .apiVersion, "kind": .kind, "metadata": {"name": .metadata.name, "namespace": .metadata.namespace}}' $TEMP_DIR/$KUBEFLOW_MANIFEST -s '$index + "-" + .metadata.namespace + .metadata.name + ".yaml"'
-)
 
 delete_kubeflow() {
-    local delete_kubeflow_error=false
-    for kubeflow_document in $TEMP_DIR/$KUBEFLOW_DOCUMENTS_DIRECTORY/*.yaml; do
-        if [ -f "$kubeflow_document" ]; then
-            resource=$(yq e '{"apiVersion": .apiVersion, "kind": .kind, "metadata": {"name": .metadata.name, "namespace": .metadata.namespace}}' $kubeflow_document -o json)
-            resource_kind=$(echo $resource | jq -r '.kind')
-
-            # We check first to avoid complaints about missing CRDs (which may have already been removed).
-            # There is a race condition here which occurs if the resource_kind disappears immediately after the check.
-            if kubectl get $resource_kind --ignore-not-found && ! kubectl delete -f $kubeflow_document --ignore-not-found && kubectl get $resource_kind; then
-                log_bad "Error deleting resource: $resource"
-                delete_kubeflow_error=true
-            fi
-        fi
-    done
-    if $delete_kubeflow_error; then
+    if kubectl get profiles.kubeflow.org &> /dev/null && ! kubectl delete profiles.kubeflow.org --all && kubectl get profiles.kubeflow.org; then
         return 1
     fi
+    kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST
 }
 
 attempts=5
