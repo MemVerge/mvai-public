@@ -42,10 +42,9 @@ div() {
 }
 
 set_log_file() {
-  local log_file
   if (( $# == 1 )) && [[ "$1" != "" ]]; then
     # Use the specified log file.
-    log_file="$1"
+    local log_file="$1"
   else
     return 1
   fi

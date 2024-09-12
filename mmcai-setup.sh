@@ -19,13 +19,13 @@ ensure_prerequisites
 
 MMAI_SETUP_LOG_DIR="mmai-setup-$(file_timestamp)"
 mkdir -p $MMAI_SETUP_LOG_DIR
-set_log_file "$MMAI_SETUP_LOG_DIR/mmai-setup.log"
+LOG_FILE="$MMAI_SETUP_LOG_DIR/mmai-setup.log"
+set_log_file $LOG_FILE
 
 TEMP_DIR=$(mktemp -d)
 cleanup() {
     dvenv || true
     rm -rf $TEMP_DIR
-    exit
 }
 trap cleanup EXIT
 
@@ -118,11 +118,11 @@ fi
 # Install mmcai-manager?
 if ! mmcai_manager_detected; then
     div
-    read -p "Install MMC.AI Manager [y/N]:" install_mmcai_manager
-    case $install_mmcai_manager in
-        [Yy]* ) install_mmcai_manager=true;;
-        * ) install_mmcai_manager=false;;
-    esac
+    if prompt_default_yn "Install MMC.AI Manager [y/N]:" n; then
+        install_mmcai_manager=true
+    else
+        install_mmcai_manager=false
+    fi
 fi
 
 if $install_mmcai_manager || mmcai_manager_detected; then
@@ -133,11 +133,11 @@ fi
 
 while $be_mmcai_manager && cert_manager_detected && ! kubeflow_detected; do
     echo "MMC.AI Manager requires Kubeflow, which provides cert-manager. Please uninstall existing cert-manager before continuing if you wish to install MMC.AI Manager."
-    read -p "Continue setup [Y/n]:" continue_setup
-    case $continue_setup in
-        [Nn]* ) continue_setup=false;;
-        * ) continue_setup=true;;
-    esac
+    if prompt_default_yn "Continue setup [Y/n]:" y; then
+        continue_setup=true
+    else
+        continue_setup=false
+    fi
     if ! $continue_setup; then
         exit 0
     fi
@@ -158,11 +158,11 @@ if ! mmcai_cluster_detected; then
         install_mmcai_cluster=true
     else
         div
-        read -p "Install MMC.AI Cluster [y/N]:" install_mmcai_cluster
-        case $install_mmcai_cluster in
-            [Yy]* ) install_mmcai_cluster=true;;
-            * ) install_mmcai_cluster=false;;
-        esac
+        if prompt_default_yn "Install MMC.AI Cluster [y/N]:" n; then
+            install_mmcai_cluster=true
+        else
+            install_mmcai_cluster=false
+        fi
     fi
 fi
 
@@ -174,11 +174,11 @@ fi
 
 if $install_mmcai_cluster && nvidia_gpu_operator_detected; then
     echo "MMC.AI Cluster requires NVIDIA GPU Operator installed with a specific configuration. If existing NVIDIA GPU Operator was not installed using this script, please uninstall existing NVIDIA GPU Operator before continuing."
-    read -p "Continue setup [Y/n]:" continue_setup
-    case $continue_setup in
-        [Nn]* ) continue_setup=false;;
-        * ) continue_setup=true;;
-    esac
+    if prompt_default_yn "Continue setup [Y/n]:" y; then
+        continue_setup=true
+    else
+        continue_setup=false
+    fi
     if ! $continue_setup; then
         exit 0
     fi
@@ -196,21 +196,21 @@ if ! nvidia_gpu_operator_detected; then
         install_nvidia_gpu_operator=true
     else
         div
-        read -p "Install NVIDIA GPU Operator [y/N]:" install_nvidia_gpu_operator
-        case $install_nvidia_gpu_operator in
-            [Yy]* ) install_nvidia_gpu_operator=true;;
-            * ) install_nvidia_gpu_operator=false;;
-        esac
+        if prompt_default_yn "Install NVIDIA GPU Operator [y/N]:" n; then
+            install_nvidia_gpu_operator=true
+        else
+            install_nvidia_gpu_operator=false
+        fi
     fi
 fi
 
 if $install_mmcai_manager && kubeflow_detected; then
     echo "MMC.AI Manager requires Kubeflow installed with a specific configuration. If existing Kubeflow was not installed using this script, please uninstall existing Kubeflow before continuing."
-    read -p "Continue setup [Y/n]:" continue_setup
-    case $continue_setup in
-        [Nn]* ) continue_setup=false;;
-        * ) continue_setup=true;;
-    esac
+    if prompt_default_yn "Continue setup [Y/n]:" y; then
+        continue_setup=true
+    else
+        continue_setup=false
+    fi
     if ! $continue_setup; then
         exit 0
     fi
@@ -228,11 +228,11 @@ if ! kubeflow_detected; then
         install_kubeflow=true
     else
         div
-        read -p "Install Kubeflow [y/N]:" install_kubeflow
-        case $install_kubeflow in
-            [Yy]* ) install_kubeflow=true;;
-            * ) install_kubeflow=false;;
-        esac
+        if prompt_default_yn "Install Kubeflow [y/N]:" n; then
+            install_kubeflow=true
+        else
+            install_kubeflow=false
+        fi
     fi
 fi
 
@@ -249,18 +249,18 @@ if ! $be_kubeflow && ! cert_manager_detected; then
         install_cert_manager=true
     else
         div
-        read -p "Install cert-manager (Helm chart) [y/N]:" install_cert_manager
-        case $install_cert_manager in
-            [Yy]* ) install_cert_manager=true;;
-            * ) install_cert_manager=false;;
-        esac
+        if prompt_default_yn "Install cert-manager (Helm chart) [y/N]:" n; then
+            install_cert_manager=true
+        else
+            install_cert_manager=false
+        fi
     fi
 fi
 
 # Get Ansible inventory for components that need it.
 if $install_mmcai_cluster || $install_kubeflow; then
     ANSIBLE_INVENTORY=''
-    until [ -e "$ANSIBLE_INVENTORY" ]; do
+    until [[ -e "$ANSIBLE_INVENTORY" ]]; do
         echo "Provide an Ansible inventory with the following Ansible host groups:"
         if $install_kubeflow; then
             echo "- [all] (used if installing Kubeflow)"
@@ -269,7 +269,7 @@ if $install_mmcai_cluster || $install_kubeflow; then
             echo "- [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP] (used if installing MMC.AI Cluster)"
         fi
         read -p "Ansible inventory: " ANSIBLE_INVENTORY
-        if ! [ -e "$ANSIBLE_INVENTORY" ]; then
+        if ! [[ -e "$ANSIBLE_INVENTORY" ]]; then
             log_bad "Path does not exist."
         fi
     done
@@ -279,11 +279,11 @@ if $install_mmcai_cluster || $install_kubeflow; then
         while (( $(echo $MYSQL_NODE_HOSTNAME | wc -w) != 1 )); do
             log_bad "Wrong number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes in Ansible inventory."
             echo "Number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes must be 1. Please fix Ansible inventory before continuing."
-            read -p "Continue setup [Y/n]:" continue_setup
-            case $continue_setup in
-                [Nn]* ) continue_setup=false;;
-                * ) continue_setup=true;;
-            esac
+            if prompt_default_yn "Continue setup [Y/n]:" y; then
+                continue_setup=true
+            else
+                continue_setup=false
+            fi
             if ! $continue_setup; then
                 exit 0
             fi
@@ -299,11 +299,11 @@ if $install_mmcai_cluster || $install_kubeflow; then
 
         if $mysql_secret_exists; then
             echo "Reuse existing billing database secret? If N/n, the existing database secret will be overwritten."
-            read -p "Reuse existing secret [Y/n]:" reuse_database_secret
-            case $reuse_database_secret in
-                [Nn]* ) create_mysql_secret=true;;
-                * ) create_mysql_secret=false;;
-            esac
+            if prompt_default_yn "Reuse existing secret [Y/n]:" y; then
+                create_mysql_secret=false
+            else
+                create_mysql_secret=true
+            fi
         else
             create_mysql_secret=true
         fi
@@ -312,12 +312,12 @@ if $install_mmcai_cluster || $install_kubeflow; then
             echo "Enter new billing database secret."
             MYSQL_ROOT_PASSWORD=''
             MYSQL_ROOT_PASSWORD_CONFIRMATION='nonempty'
-            until [ "$MYSQL_ROOT_PASSWORD" = "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; do
+            until [[ "$MYSQL_ROOT_PASSWORD" == "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]]; do
                 read -sp "Billing database root password:" MYSQL_ROOT_PASSWORD
                 echo
                 read -sp "Confirm database root password:" MYSQL_ROOT_PASSWORD_CONFIRMATION
                 echo
-                if [ "$MYSQL_ROOT_PASSWORD" != "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]; then
+                if [[ "$MYSQL_ROOT_PASSWORD" != "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]]; then
                     log_bad "Passwords do not match."
                 fi
             done
@@ -338,11 +338,11 @@ echo "Kubeflow:" $install_kubeflow
 echo "cert-manager:" $install_cert_manager
 
 div
-read -p "Confirm selection [y/N]:" confirm_selection
-case $confirm_selection in
-    [Yy]* ) confirm_selection=true;;
-    * ) confirm_selection=false;;
-esac
+if prompt_default_yn "Confirm selection [y/N]:" n; then
+    confirm_selection=true
+else
+    confirm_selection=false
+fi
 
 if ! $confirm_selection; then
     div

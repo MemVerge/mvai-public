@@ -23,11 +23,28 @@ ensure_prerequisites() {
     ./$script
 }
 
+prompt_default_yn() {
+    local prompt="$1"
+    local default="$2"
+    local response
+    while true; do
+        read -p "$prompt" response
+        if [[ -z "$response" ]]; then
+            response="$default"
+        fi
+        response=$(echo "$response" | tr '[:upper:]' '[:lower:]')
+        case "$response" in
+            y|yes ) return 0;;
+            n|no ) return 1;;
+            * ) echo "Invalid response. Please enter 'y' or 'n'.";;
+        esac
+    done
+}
+
 build_kubeflow() {
-    local base_dir
     if (( $# == 1 )) && [[ "$1" != "" ]] && [[ -d "$1" ]]; then
         # Use the specified log file.
-        base_dir=$1
+        local base_dir=$1
     else
         return 1
     fi

@@ -19,13 +19,13 @@ ensure_prerequisites
 
 MMAI_TEARDOWN_LOG_DIR="mmai-teardown-$(file_timestamp)"
 mkdir -p $MMAI_TEARDOWN_LOG_DIR
-set_log_file "$MMAI_TEARDOWN_LOG_DIR/mmai-teardown.log"
+LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/mmai-teardown.log"
+set_log_file $LOG_FILE
 
 TEMP_DIR=$(mktemp -d)
 cleanup() {
     dvenv || true
     rm -rf $TEMP_DIR
-    exit
 }
 trap cleanup EXIT
 
@@ -78,11 +78,11 @@ fi
 # Remove mmcai-cluster?
 if $mmcai_cluster_detected; then
     div
-    read -p "Remove MMC.AI Cluster [y/N]:" remove_mmcai_cluster
-    case $remove_mmcai_cluster in
-        [Yy]* ) remove_mmcai_cluster=true;;
-        * ) remove_mmcai_cluster=false;;
-    esac
+    if prompt_default_yn "Remove MMC.AI Cluster [y/N]:" n; then
+        remove_mmcai_cluster=true
+    else
+        remove_mmcai_cluster=false
+    fi
 fi
 
 if $remove_mmcai_cluster || ! $mmcai_cluster_detected; then
@@ -100,11 +100,11 @@ if $mmcai_manager_detected; then
         remove_mmcai_manager=true
     else
         div
-        read -p "Remove MMC.AI Manager [y/N]:" remove_mmcai_manager
-        case $remove_mmcai_manager in
-            [Yy]* ) remove_mmcai_manager=true;;
-            * ) remove_mmcai_manager=false;;
-        esac
+        if prompt_default_yn "Remove MMC.AI Manager [y/N]:" n; then
+            remove_mmcai_manager=true
+        else
+            remove_mmcai_manager=false
+        fi
     fi
 fi
 
@@ -124,35 +124,35 @@ if $no_mmcai_cluster; then
     fi
 
     echo_red "Caution: This will cause data loss!"
-    read -p "Remove cluster resources (e.g. node groups, departments, projects, workloads) [y/N]:" remove_cluster_resources
-    case $remove_cluster_resources in
-        [Yy]* ) remove_cluster_resources=true;;
-        * ) remove_cluster_resources=false;;
-    esac
+    if prompt_default_yn "Remove cluster resources (e.g. node groups, departments, projects, workloads) [y/N]:" n; then
+        remove_cluster_resources=true
+    else
+        remove_cluster_resources=false
+    fi
 
     if $remove_cluster_resources && $mmcai_cluster_detected; then
-        read -p "Force? This may result in an unclean state [y/N]:" force_if_remove_cluster_resources
-        case $force_if_remove_cluster_resources in
-            [Yy]* ) force_if_remove_cluster_resources=true;;
-            * ) force_if_remove_cluster_resources=false;;
-        esac
+        if prompt_default_yn "Force? This may result in an unclean state [y/N]:" n; then
+            force_if_remove_cluster_resources=true
+        else
+            force_if_remove_cluster_resources=false
+        fi
     fi
 
 
     # Remove billing database?
     div
     echo_red "Caution: This will cause data loss!"
-    read -p "Remove billing database [y/N]:" remove_billing_database
-    case $remove_billing_database in
-        [Yy]* ) remove_billing_database=true;;
-        * ) remove_billing_database=false;;
-    esac
+    if prompt_default_yn "Remove billing database [y/N]:" n; then
+        remove_billing_database=true
+    else
+        remove_billing_database=false
+    fi
     if $remove_billing_database; then
         echo "Provide an Ansible inventory of nodes (Ansible host group [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP]) to remove billing databases from."
         ANSIBLE_INVENTORY=''
-        until [ -e "$ANSIBLE_INVENTORY" ]; do
+        until [[ -e "$ANSIBLE_INVENTORY" ]]; do
             read -p "Ansible inventory: " ANSIBLE_INVENTORY
-            if ! [ -e "$ANSIBLE_INVENTORY" ]; then
+            if ! [[ -e "$ANSIBLE_INVENTORY" ]]; then
                 log_bad "Path does not exist."
             fi
         done
@@ -160,12 +160,11 @@ if $no_mmcai_cluster; then
 
     # Remove MemVerge image pull secrets?
     div
-    read -p "Remove MemVerge image pull secrets [y/N]:" remove_memverge_secrets
-    case $remove_memverge_secrets in
-        [Yy]* ) remove_memverge_secrets=true;;
-        * ) remove_memverge_secrets=false;;
-    esac
-
+    if prompt_default_yn "Remove MemVerge image pull secrets [y/N]:" n; then
+        remove_memverge_secrets=true
+    else
+        remove_memverge_secrets=false
+    fi
 
     # Remove namespaces?
     if $remove_cluster_resources \
@@ -174,42 +173,42 @@ if $no_mmcai_cluster; then
     then
         div
         echo_red "Caution: This is dangerous!"
-        read -p "Remove MMC.AI namespaces [y/N]:" remove_namespaces
-        case $remove_namespaces in
-            [Yy]* ) remove_namespaces=true;;
-            * ) remove_namespaces=false;;
-        esac
+        if prompt_default_yn "Remove MMC.AI namespaces [y/N]:" n; then
+            remove_namespaces=true
+        else
+            remove_namespaces=false
+        fi
     fi
 
 
     # Remove Prometheus CRDs and namespace?
     div
     echo_red "Caution: This is dangerous!"
-    read -p "Remove Prometheus CRDs and namespace (MMC.AI included dependency) [y/N]:" remove_prometheus_crds_namespace
-    case $remove_prometheus_crds_namespace in
-        [Yy]* ) remove_prometheus_crds_namespace=true;;
-        * ) remove_prometheus_crds_namespace=false;;
-    esac
+    if prompt_default_yn "Remove Prometheus CRDs and namespace (MMC.AI included dependency) [y/N]:" n; then
+        remove_prometheus_crds_namespace=true
+    else
+        remove_prometheus_crds_namespace=false
+    fi
 
 
     # Remove NVIDIA GPU Operator?
     div
     echo_red "Caution: This is dangerous!"
-    read -p "Remove NVIDIA GPU Operator (MMC.AI standalone dependency) [y/N]:" remove_nvidia_gpu_operator
-    case $remove_nvidia_gpu_operator in
-        [Yy]* ) remove_nvidia_gpu_operator=true;;
-        * ) remove_nvidia_gpu_operator=false;;
-    esac
+    if prompt_default_yn "Remove NVIDIA GPU Operator (MMC.AI standalone dependency) [y/N]:" n; then
+        remove_nvidia_gpu_operator=true
+    else
+        remove_nvidia_gpu_operator=false
+    fi
 
 
     # Remove Kubeflow?
     div
     echo_red "Caution: This is dangerous!"
-    read -p "Remove Kubeflow (MMC.AI standalone dependency) [y/N]:" remove_kubeflow
-    case $remove_kubeflow in
-        [Yy]* ) remove_kubeflow=true;;
-        * ) remove_kubeflow=false;;
-    esac
+    if prompt_default_yn "Remove Kubeflow (MMC.AI standalone dependency) [y/N]:" n; then
+        remove_kubeflow=true
+    else
+        remove_kubeflow=false
+    fi
 fi
 
 ################################################################################
@@ -232,11 +231,11 @@ echo "NVIDIA GPU Operator:" $remove_nvidia_gpu_operator
 echo "Kubeflow:" $remove_kubeflow
 
 div
-read -p "Confirm selection [y/N]:" confirm_selection
-case $confirm_selection in
-    [Yy]* ) confirm_selection=true;;
-    * ) confirm_selection=false;;
-esac
+if prompt_default_yn "Confirm selection [y/N]:" n; then
+    confirm_selection=true
+else
+    confirm_selection=false
+fi
 
 if ! $confirm_selection; then
     div
@@ -277,14 +276,14 @@ if $remove_cluster_resources; then
 
     if $force_if_remove_cluster_resources; then
         for cluster_resource_crd in $cluster_resource_crds; do
-            until [ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]; do
+            until [[ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]]; do
                 namespaces=$(kubectl get namespaces -o custom-columns=:.metadata.name)
                 for namespace in $namespaces; do
-                    if [ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]; then
+                    if [[ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]]; then
                         break
                     fi
                     resources=$(kubectl get -n $namespace $cluster_resource_crd -o custom-columns=:.metadata.name)
-                    if ! [ -z "$resources" ]; then
+                    if ! [[ -z "$resources" ]]; then
                         kubectl patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]'
                     fi
                 done
@@ -295,7 +294,7 @@ if $remove_cluster_resources; then
     wait $cluster_resource_crds_removed
 
     for cluster_resource_crd in $cluster_resource_crds; do
-        if ! [ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]; then
+        if ! [[ -z "$(kubectl get crd $cluster_resource_crd --ignore-not-found)" ]]; then
             log_bad "CRD $cluster_resource_crd was not removed successfully."
         fi
     done
@@ -375,7 +374,7 @@ if $remove_kubeflow; then
     attempts=5
     log "Deleting all Kubeflow resources..."
     log "Attempts remaining: $((attempts))"
-    while [ $attempts -gt 0 ] && ! kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+    while (( attempts > 0 )) && ! kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
         attempts=$((attempts - 1))
         log "Kubeflow removal incomplete."
         log "Attempts remaining: $((attempts))"
