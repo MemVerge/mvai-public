@@ -1,6 +1,6 @@
 #!/bin/bash
 
-set -euo pipefail
+# set -euo pipefail
 
 imports='
     common.sh
@@ -291,6 +291,13 @@ if $remove_cluster_resources; then
         done
     fi
 
+    # Get all mmc.ai labels attached to nodes
+    mmcai_labels=$(kubectl describe nodes -A | sed 's/=/ /g' | awk '{print $1}' | grep mmc.ai)
+
+    for label in ${mmcai_labels[@]}; do
+        kubectl label nodes --all ${label}-
+    done
+
     wait $cluster_resource_crds_removed
 
     for cluster_resource_crd in $cluster_resource_crds; do
@@ -304,7 +311,13 @@ if $remove_mmcai_cluster; then
     div
     log_good "Removing MMC.AI Cluster..."
     echo "If you selected to remove cluster resources, disregard below messages that resources are kept due to the resource policy:"
-    helm uninstall -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug
+    ## If no service account, run helm uninstall without the engine cleanup hook.
+    if kubectl get serviceaccount mmcloud-operator-controller-manager -n mmcloud-operator-system &> /dev/null; then
+        log "Service account mmcloud-operator-controller-manager not found. Skipping mmcloud-engine cleanup Helm hook."
+        helm uninstall --no-hooks -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug
+    else
+        helm uninstall -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug
+    fi
 fi
 
 if $remove_billing_database; then
@@ -334,10 +347,23 @@ fi
 if $remove_nvidia_gpu_operator; then
     div
     log_good "Removing NVIDIA GPU Operator..."
+
+    # The order is important here.
+    # NVIDIA GPU Operator Helm chart does not create an instance of this CRD so the CRD can be deleted first.
     kubectl delete crd nvidiadrivers.nvidia.com --ignore-not-found
-    kubectl delete crd clusterpolicies.nvidia.com --ignore-not-found
-    helm uninstall -n gpu-operator nvidia-gpu-operator --ignore-not-found --debug
+
+    if kubectl get crd clusterpolicies.nvidia.com; then
+        cluster_policies=$(kubectl get clusterpolicies -o custom-columns=:.metadata.name)
+    fi
+    if ! [ -z "$cluster_policies" ]; then
+        kubectl delete clusterpolicies $cluster_policies --ignore-not-found
+    fi
+
+    helm uninstall --debug -n gpu-operator nvidia-gpu-operator --ignore-not-found
     kubectl delete namespace gpu-operator --ignore-not-found
+
+    # NVIDIA GPU Operator Helm chart creates an instance of this CRD so the CRD must be deleted after.
+    kubectl delete crd clusterpolicies.nvidia.com --ignore-not-found
 
     # NFD
     kubectl delete crd nodefeatures.nfd.k8s-sigs.io --ignore-not-found
