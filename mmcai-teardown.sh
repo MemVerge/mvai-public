@@ -259,7 +259,7 @@ if $remove_cluster_resources; then
 
             if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
                 error_or_found=true
-            elif [ -z "$get_crd_output" ]; then
+            elif [[ -z "$get_crd_output" ]]; then
                 error_or_found=false
             else
                 error_or_found=true
@@ -270,15 +270,27 @@ if $remove_cluster_resources; then
                 for namespace in $namespaces; do
                     if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
                         error_or_found=true
-                    elif [ -z "$get_crd_output" ]; then
+                        log_bad "Unhandled error getting CRD $cluster_resource_crd. May loop infinitely."
+                        sleep 1
+                    elif [[ -z "$get_crd_output" ]]; then
                         error_or_found=false
                     else
                         error_or_found=true
                         # This should work for cluster-wide resources.
                         if ! resources=$(kubectl get -n $namespace $cluster_resource_crd -o custom-columns=:.metadata.name); then
-                            continue
-                        elif ! [ -z "$resources" ]; then
-                            kubectl patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]' || true
+                            log_bad "Unhandled error getting $cluster_resource_crd resources in namespace $namespace. May loop infinitely."
+                            sleep 1
+                        elif ! [[ -z "$resources" ]]; then
+                            if ! kubectl patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]'; then
+                                log_bad "Unhandled error patching $cluster_resource_crd resources in namespace $namespace. May loop infinitely."
+                                sleep 1
+                            fi
+                        elif ! all_resources=$(kubectl get $cluster_resource_crd -A --ignore-not-found); then
+                            log_bad "Unhandled error getting all $cluster_resource_crd resources in cluster. May loop infinitely."
+                            sleep 1
+                        elif [[ -z "$all_resources" ]]; then
+                            log "No $cluster_resource_crd resources found. CRD should be removed soon. Otherwise, may loop infinitely."
+                            sleep 1
                         fi
                     fi
                 done
