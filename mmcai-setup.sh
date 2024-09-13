@@ -45,13 +45,11 @@ function get_opts() {
             MMCAI_GHCR_SECRET="$OPTARG"
             ;;
         \?)
-            div
             log_bad "Invalid option: -$OPTARG" >&2
             usage
             exit 1
             ;;
         :)
-            div
             log_bad "Option -$OPTARG requires an argument." >&2
             usage
             exit 1
@@ -71,14 +69,12 @@ function autofind_secret() {
     else
         # No local secret and no OPTARG; exit
         if [ -z "$MMCAI_GHCR_SECRET" ]; then
-            div
             log_bad "Please provide a path to ${SECRET_YAML}."
             usage
             exit 1
         fi
     fi
 
-    div
     log_good "Found image pull secret ${MMCAI_GHCR_SECRET}."
     log_good "Do you want to use these credentials to set up MMC.AI? [Y/n]"
     read -p "" $continue
@@ -96,15 +92,13 @@ function autofind_secret() {
 
 
 function setup_mysql_directories() {
-    div
     log_good "Please provide information for billing database:"
     read -p "MySQL database node hostname: " mysql_node_hostname
     read -sp "MySQL root password: " mysql_root_password
     echo ""
 
-    div
     log_good "Creating directories for billing database:"
-    div
+    div 
 
     wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-pre-setup.sh
     chmod +x mysql-pre-setup.sh
@@ -129,15 +123,11 @@ function helm_login() {
 
     # Attempt login
     if echo $secret_token | helm registry login ghcr.io/memverge -u $secret_user --password-stdin; then
-        div
         log_good "Helm login was successful."
     else
-        div
         log_bad "Helm login was unsuccessful. Please provide an ${SECRET_YAML} that allows helm login."
-        div
         log "Report:"
         cat ${SECRET_YAML}
-        div
         exit 1
     fi
 }
@@ -192,7 +182,6 @@ function determine_install_type() {
     # If so, ask user if they want to pull internal or external.
     if helm_poke oci://ghcr.io/memverge/charts/internal/mmcai-manager; then
         rm mmcai-manager*
-        div
         log_good "Your ${SECRET_YAML} allows you to pull internal images."
         log_good "Would you like to install internal builds on your cluster? [Y/n]:"
         
@@ -203,10 +192,8 @@ function determine_install_type() {
         esac
     elif helm_poke oci://ghcr.io/memverge/charts/mmcai-manager; then
         rm mmcai-manager*
-        div
         log_good "Your ${SECRET_YAML} allows you to pull customer images."
     else
-        div
         log_bad "Your ${SECRET_YAML} does not allow you to pull images. Please contact MemVerge customer support."
         exit 1
     fi
@@ -218,12 +205,10 @@ function determine_install_type() {
         install_flags="--debug --devel"
     fi
 
-    div
     log "Based on ${SECRET_YAML} credentials, will install from $install_repository."
 }
 
 function setup_mmcai_secret() {
-    div
     log_good "Creating namespaces, and applying image pull secrets if present..."
 
     if [[ -f "${MMCAI_GHCR_SECRET}" ]]; then
@@ -240,9 +225,7 @@ function setup_mmcai_secret() {
 
 
 function setup_mysql_secret() {
-    div
     log_good "Creating mysql secret..."
-    div
 
     kubectl -n $NAMESPACE get secret mmai-mysql-secret &>/dev/null || \
     # While we only need mysql-root-password, all of these keys are
@@ -255,26 +238,36 @@ function setup_mysql_secret() {
 
 
 function do_install() {
-    div
     log_good "Installing charts..."
-    div
 
     helm_install
 }
 
 
 div
+
 log "Welcome to MMC.AI setup!"
+
 div
 
 get_opts ${@}
 
+div
+
 autofind_secret
+
+div
 
 setup_mysql_directories
 
+div
+
 setup_mmcai_secret
 
+div
+
 setup_mysql_secret
+
+div
 
 do_install
