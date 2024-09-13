@@ -11,7 +11,7 @@ install_repository="oci://ghcr.io/memverge/charts"
 
 MMCAI_GHCR_SECRET=""
 
-## install jq for later parsing
+## helper functions for jq install and cleanup
 
 function cleanup() {
     sudo rm -rf /usr/local/bin/jq
@@ -27,11 +27,6 @@ function install_jq() {
     sudo cp jq /usr/local/bin/
 }
 
-## welcome message
-
-div
-log "Welcome to MMC.AI setup!"
-div
 
 function usage () {
     div
@@ -42,79 +37,83 @@ function usage () {
     div
 }
 
-### Input parsing
 
-while getopts "f:" opt; do
-  case $opt in
-    f)
-        MMCAI_GHCR_SECRET="$OPTARG"
-        ;;
-    \?)
-        div
-        log_bad "Invalid option: -$OPTARG" >&2
-        usage
-        exit 1
-        ;;
-    :)
-        div
-        log_bad "Option -$OPTARG requires an argument." >&2
-        usage
-        exit 1
-        ;;
-  esac
-done
+function get_opts() {
+    while getopts "f:" opt; do
+    case $opt in
+        f)
+            MMCAI_GHCR_SECRET="$OPTARG"
+            ;;
+        \?)
+            div
+            log_bad "Invalid option: -$OPTARG" >&2
+            usage
+            exit 1
+            ;;
+        :)
+            div
+            log_bad "Option -$OPTARG requires an argument." >&2
+            usage
+            exit 1
+            ;;
+    esac
+    done
+}
 
-# First check for mmcai-ghcr-secret-internal.yaml.
-# If that is present, pull it; if not, check without -internal.
-if [ -f ${SECRET_INTERNAL_YAML} ]; then
-    MMCAI_GHCR_SECRET=$(pwd)/${SECRET_INTERNAL_YAML}
-elif [ -f ${SECRET_YAML} ]; then
-    MMCAI_GHCR_SECRET=$(pwd)/${SECRET_YAML}
-else
-    # No local secret and no OPTARG; exit
-    if [ -z "$MMCAI_GHCR_SECRET" ]; then
-        div
-        log_bad "Please provide a path to ${SECRET_YAML}."
-        usage
-        exit 1
+
+function autofind_secret() {
+    # First check for mmcai-ghcr-secret-internal.yaml.
+    # If that is present, pull it; if not, check without -internal.
+    if [ -f ${SECRET_INTERNAL_YAML} ]; then
+        MMCAI_GHCR_SECRET=$(pwd)/${SECRET_INTERNAL_YAML}
+    elif [ -f ${SECRET_YAML} ]; then
+        MMCAI_GHCR_SECRET=$(pwd)/${SECRET_YAML}
+    else
+        # No local secret and no OPTARG; exit
+        if [ -z "$MMCAI_GHCR_SECRET" ]; then
+            div
+            log_bad "Please provide a path to ${SECRET_YAML}."
+            usage
+            exit 1
+        fi
     fi
-fi
 
-div
-log_good "Found image pull secret ${MMCAI_GHCR_SECRET}."
-log_good "Do you want to use these credentials to set up MMC.AI? [Y/n]"
-read -p "" $continue
-case $continue in
-    Nn)
-        log_good "Exiting setup..."
-        sleep 1
-        exit 0
-        ;;
-    *)
-        log_good "Continuing setup with credentials in ${MMCAI_GHCR_SECRET}..."
-        ;;
-esac
+    div
+    log_good "Found image pull secret ${MMCAI_GHCR_SECRET}."
+    log_good "Do you want to use these credentials to set up MMC.AI? [Y/n]"
+    read -p "" $continue
+    case $continue in
+        Nn)
+            log_good "Exiting setup..."
+            sleep 1
+            exit 0
+            ;;
+        *)
+            log_good "Continuing setup with credentials in ${MMCAI_GHCR_SECRET}..."
+            ;;
+    esac
+}
 
-### Setup mysql directories
 
-div
-log_good "Please provide information for billing database:"
-read -p "MySQL database node hostname: " mysql_node_hostname
-read -sp "MySQL root password: " mysql_root_password
-echo ""
+function setup_mysql_directories() {
+    div
+    log_good "Please provide information for billing database:"
+    read -p "MySQL database node hostname: " mysql_node_hostname
+    read -sp "MySQL root password: " mysql_root_password
+    echo ""
 
-div
-log_good "Creating directories for billing database:"
-div
+    div
+    log_good "Creating directories for billing database:"
+    div
 
-wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-pre-setup.sh
-chmod +x mysql-pre-setup.sh
-./mysql-pre-setup.sh
+    wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mysql-pre-setup.sh
+    chmod +x mysql-pre-setup.sh
+    ./mysql-pre-setup.sh
+}
 
-### Apply image pull secrets, which also creates our namespaces.
 
-div
-log_good "Creating namespaces, and applying image pull secrets if present..."
+### Until setup_mmcai_secret, these are helper functions for
+### interfacing with helm and pulling credentials from a dockerconfigjson
 
 # Log into helm using the credentials from the image pull secret.
 function helm_login() {
@@ -223,35 +222,59 @@ function determine_install_type() {
     log "Based on ${SECRET_YAML} credentials, will install from $install_repository."
 }
 
-if [[ -f "${MMCAI_GHCR_SECRET}" ]]; then
-    kubectl apply -f ${MMCAI_GHCR_SECRET}
-    helm_login
-    determine_install_type
-else
-    kubectl create ns $NAMESPACE
-    kubectl create ns mmcloud-operator-system
-fi
+function setup_mmcai_secret() {
+    div
+    log_good "Creating namespaces, and applying image pull secrets if present..."
 
-## Create monitoring namespace
+    if [[ -f "${MMCAI_GHCR_SECRET}" ]]; then
+        kubectl apply -f ${MMCAI_GHCR_SECRET}
+        helm_login
+        determine_install_type
+        kubectl create namespace monitoring
+    else
+        kubectl create ns $NAMESPACE
+        kubectl create ns mmcloud-operator-system
+        kubectl create namespace monitoring
+    fi
+}
 
-kubectl get namespace monitoring &>/dev/null || kubectl create namespace monitoring
+
+function setup_mysql_secret() {
+    div
+    log_good "Creating mysql secret..."
+    div
+
+    kubectl -n $NAMESPACE get secret mmai-mysql-secret &>/dev/null || \
+    # While we only need mysql-root-password, all of these keys are
+    # necessary for the secret according to the mysql Helm chart documentation
+    kubectl -n $NAMESPACE create secret generic mmai-mysql-secret \
+        --from-literal=mysql-root-password=$mysql_root_password   \
+        --from-literal=mysql-password=$mysql_root_password        \
+        --from-literal=mysql-replication-password=$mysql_root_password
+}
+
+
+function do_install() {
+    div
+    log_good "Installing charts..."
+    div
+
+    helm_install
+}
+
 
 div
-log_good "Creating mysql secret..."
+log "Welcome to MMC.AI setup!"
 div
 
-## Create MySQL secret
+get_opts ${@}
 
-kubectl -n $NAMESPACE get secret mmai-mysql-secret &>/dev/null || \
-# While we only need mysql-root-password, all of these keys are
-# necessary for the secret according to the mysql Helm chart documentation
-kubectl -n $NAMESPACE create secret generic mmai-mysql-secret \
-    --from-literal=mysql-root-password=$mysql_root_password   \
-    --from-literal=mysql-password=$mysql_root_password        \
-    --from-literal=mysql-replication-password=$mysql_root_password
+autofind_secret
 
-div
-log_good "Installing charts..."
-div
+setup_mysql_directories
 
-helm_install
+setup_mmcai_secret
+
+setup_mysql_secret
+
+do_install
