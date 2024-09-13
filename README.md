@@ -73,7 +73,9 @@ Within, there are four relevant host groups:
 
 Once Ansible configuration is complete, copy these commands into your terminal to install Kubernetes:
 ```bash
-curl -Lf https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/deepops-setup.sh | bash
+curl -LfO https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/deepops-setup.sh
+chmod +x deepops-setup.sh
+./deepops-setup.sh
 ```
 
 ## Installing Memory Machine AI
@@ -146,7 +148,9 @@ Download and run the interactive `mmcai-setup.sh` script on the control plane no
 You will have a chance to confirm your changes after making your selections:
 
 ```bash
-curl -Lf https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-setup.sh | bash
+curl -LfO https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-setup.sh
+chmod +x mmcai-setup.sh
+./mmcai-setup.sh
 ```
 
 If MMC.AI Manager is installed, the MMC.AI dashboard should be accessible at `http://<control-plane-ip>:32323`.
@@ -186,5 +190,7 @@ If you have nothing else installed in the cluster and want to remove everything,
 
 You will have a chance to confirm your changes after making your selections:
 ```bash
-curl -Lf https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-teardown.sh | bash
+curl -LfO https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-teardown.sh
+chmod +x mmcai-teardown.sh
+./mmcai-teardown.sh
 ```
