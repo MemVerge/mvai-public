@@ -132,13 +132,22 @@ function helm_login() {
 }
 
 function helm_poke() {
-    attempts=3
+    attempts=1
+    limit=5
+
+    log "Will attempt to pull $1 $attempt times..."
     until helm pull --devel $1 2>&1 > /dev/null; do
-        if [ $attempts -eq 0 ]; then
+        log "Attempt $attempts failed."
+    
+        attempts=$((attempts + 1))
+        if [ $attempts -gt $limit ]; then
             return 1
         fi
-        attempts=$((attempts - 1))
+    
+        sleep 1
     done
+
+    log "Attempt $attempts succeeded."
     return 0
 }
 
