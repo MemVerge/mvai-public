@@ -317,6 +317,7 @@ if $remove_mmcai_cluster; then
         helm uninstall --debug --no-hooks -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found
     else
         helm uninstall --debug -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found
+        log "Performed uninstallation with mmcloud-engine cleanup Helm hook. On success, engines.mmcloud.io CRD should be removed irrespective of resource policy."
     fi
 fi
 
