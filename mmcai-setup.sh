@@ -161,12 +161,12 @@ function helm_install() {
 
     if ! helm_poke ${install_repository}/mmcai-manager; then
         log_bad "Could not pull mmcai-manager! Try this script again, and if the issue persists, contact support@memverge.com."
-        rm -rf mmcai-cluster*
+        rm -rf mmcai-cluster*.tgz
         exit 1
     fi
 
-    mmcai_cluster_tgz=$(ls mmcai-cluster* | head -n 1)
-    mmcai_manager_tgz=$(ls mmcai-manager* | head -n 1)
+    mmcai_cluster_tgz=$(ls mmcai-cluster*.tgz | head -n 1)
+    mmcai_manager_tgz=$(ls mmcai-manager*.tgz | head -n 1)
 
     helm install $install_flags -n $NAMESPACE mmcai-cluster $mmcai_cluster_tgz \
         --set billing.database.nodeHostname=$mysql_node_hostname
