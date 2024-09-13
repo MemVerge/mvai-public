@@ -45,10 +45,11 @@ function helm_login() {
         log_good "Helm login was successful."
     else
         div
-        log_bad "Helm login was unsuccessful. Please provide an ${SECRET_YAML} that allows helm login."
+        log_bad "Helm login was unsuccessful."
+        log_bad "Please provide an mmcai-ghcr-secret-internal.yaml that allows helm login."
         div
         log "Report:"
-        cat ${SECRET_YAML}
+        cat mmcai-ghcr-secret-internal.yaml
         div
         exit 1
     fi
@@ -84,9 +85,53 @@ div
 log_good "Beginning installation..."
 div
 
-## install mmc.ai system
-helm install --debug -n $NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/internal/mmcai-cluster --devel \
-    --set billing.database.nodeHostname=$mysql_node_hostname
+install_repository=oci://ghcr.io/memverge/charts/internal
 
-## install mmc.ai management
-helm install --debug -n $NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/internal/mmcai-manager --devel
+function helm_poke() {
+    attempts=1
+    limit=5
+
+    log "Will attempt to pull $1 $limit times..."
+    until helm pull --devel $1 2>&1 > /dev/null; do
+        log "Attempt $attempts failed."
+    
+        attempts=$((attempts + 1))
+        if [ $attempts -gt $limit ]; then
+            return 1
+        fi
+    
+        sleep 1
+    done
+
+    log "Attempt $attempts succeeded."
+    return 0
+}
+
+function helm_install() {
+    # Pull the charts via helm poke, then deploy via helm install.
+
+    if ! helm_poke ${install_repository}/mmcai-cluster; then
+        log_bad "Could not pull mmcai-cluster! Try this script again, and if the issue persists, contact support@memverge.com."
+        exit 1
+    fi
+
+    if ! helm_poke ${install_repository}/mmcai-manager; then
+        log_bad "Could not pull mmcai-manager! Try this script again, and if the issue persists, contact support@memverge.com."
+        rm -rf mmcai-cluster*.tgz
+        exit 1
+    fi
+
+    mmcai_cluster_tgz=$(ls mmcai-cluster*.tgz | head -n 1)
+    mmcai_manager_tgz=$(ls mmcai-manager*.tgz | head -n 1)
+
+    helm install $install_flags -n $NAMESPACE mmcai-cluster $mmcai_cluster_tgz \
+        --set billing.database.nodeHostname=$mysql_node_hostname \
+        --debug --devel
+
+    helm install $install_flags -n $NAMESPACE mmcai-manager $mmcai_manager_tgz \
+        --debug --devel
+
+    rm -rf $mmcai_cluster_tgz $mmcai_manager_tgz
+}
+
+helm_install
