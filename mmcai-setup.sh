@@ -2,9 +2,18 @@
 
 source logging.sh
 
+NAMESPACE="mmcai-system"
+SECRET_YAML="mmcai-ghcr-secret.yaml"
+SECRET_INTERNAL_YAML="mmcai-ghcr-secret-internal.yaml"
+
+install_internal=false
+install_repository="oci://ghcr.io/memverge/charts"
+
+MMCAI_GHCR_SECRET=""
+
 ## install jq for later parsing
 
-cleanup() {
+function cleanup() {
     sudo rm -rf /usr/local/bin/jq
     trap - EXIT
     exit
@@ -12,9 +21,11 @@ cleanup() {
 
 trap cleanup EXIT
 
-wget -O jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
-chmod +x jq
-sudo cp jq /usr/local/bin/
+function install_jq() {
+    wget -O jq https://github.com/jqlang/jq/releases/download/jq-1.7.1/jq-linux-amd64
+    chmod +x jq
+    sudo cp jq /usr/local/bin/
+}
 
 ## welcome message
 
@@ -22,18 +33,16 @@ div
 log "Welcome to MMC.AI setup!"
 div
 
-NAMESPACE="mmcai-system"
-SECRET_YAML="mmcai-ghcr-secret.yaml"
-SECRET_INTERNAL_YAML="mmcai-ghcr-secret-internal.yaml"
-
 function usage () {
     div
     echo "$0 [-f yaml]: MMC.AI setup wizard."
-    echo "-f: takes a path to ${SECRET_YAML}."
-    echo "    By default, the script checks if ${SECRET_YAML} exists in the current directory."
-    echo "    If not, then this argument must be provided."
+    echo "    -f: takes a path to ${SECRET_YAML}."
+    echo "        By default, the script checks if ${SECRET_YAML} exists in the current directory."
+    echo "        If not, then this argument must be provided."
     div
 }
+
+### Input parsing
 
 while getopts "f:" opt; do
   case $opt in
@@ -86,10 +95,12 @@ case $continue in
         ;;
 esac
 
+### Setup mysql directories
+
 div
 log_good "Please provide information for billing database:"
 read -p "MySQL database node hostname: " mysql_node_hostname
-read -sp "MySQL root password: " MYSQL_ROOT_PASSWORD
+read -sp "MySQL root password: " mysql_root_password
 echo ""
 
 div
@@ -100,14 +111,15 @@ wget -O mysql-pre-setup.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-set
 chmod +x mysql-pre-setup.sh
 ./mysql-pre-setup.sh
 
+### Apply image pull secrets, which also creates our namespaces.
+
 div
 log_good "Creating namespaces, and applying image pull secrets if present..."
 
-install_internal=false
-install_repository="oci://ghcr.io/memverge/charts"
-
 # Log into helm using the credentials from the image pull secret.
 function helm_login() {
+    install_jq
+
     # Extract creds
     secret_json=$(
         kubectl get secret memverge-dockerconfig -n mmcai-system --output="jsonpath={.data.\.dockerconfigjson}" |
@@ -152,7 +164,7 @@ function helm_poke() {
 }
 
 function helm_install() {
-    ## Pull the charts via helm poke, then deploy via helm install.
+    # Pull the charts via helm poke, then deploy via helm install.
 
     if ! helm_poke ${install_repository}/mmcai-cluster; then
         log_bad "Could not pull mmcai-cluster! Try this script again, and if the issue persists, contact support@memverge.com."
@@ -231,11 +243,12 @@ div
 ## Create MySQL secret
 
 kubectl -n $NAMESPACE get secret mmai-mysql-secret &>/dev/null || \
-# While we only need mysql-root-password, all of these keys are necessary for the secret according to the mysql Helm chart documentation
+# While we only need mysql-root-password, all of these keys are
+# necessary for the secret according to the mysql Helm chart documentation
 kubectl -n $NAMESPACE create secret generic mmai-mysql-secret \
-    --from-literal=mysql-root-password=$MYSQL_ROOT_PASSWORD \
-    --from-literal=mysql-password=$MYSQL_ROOT_PASSWORD \
-    --from-literal=mysql-replication-password=$MYSQL_ROOT_PASSWORD
+    --from-literal=mysql-root-password=$mysql_root_password   \
+    --from-literal=mysql-password=$mysql_root_password        \
+    --from-literal=mysql-replication-password=$mysql_root_password
 
 div
 log_good "Installing charts..."
