@@ -314,9 +314,9 @@ if $remove_mmcai_cluster; then
     ## If no service account, run helm uninstall without the engine cleanup hook.
     if kubectl get serviceaccount mmcloud-operator-controller-manager -n mmcloud-operator-system &> /dev/null; then
         log "Service account mmcloud-operator-controller-manager not found. Skipping mmcloud-engine cleanup Helm hook."
-        helm uninstall --no-hooks -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug
+        helm uninstall --no-hooks -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug --wait --timeout 5m0s
     else
-        helm uninstall -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug
+        helm uninstall -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found --debug --wait --timeout 5m0s
     fi
 fi
 
@@ -391,6 +391,13 @@ if $remove_prometheus_crds_namespace; then
     kubectl delete namespace $PROMETHEUS_NAMESPACE --ignore-not-found
 fi
 
+delete_kubeflow() {
+    if kubectl get profiles.kubeflow.org &> /dev/null && ! kubectl delete profiles.kubeflow.org --all && kubectl get profiles.kubeflow.org; then
+        return 1
+    fi
+    kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST
+}
+
 if $remove_kubeflow; then
     div
     log_good "Removing Kubeflow..."
@@ -400,7 +407,7 @@ if $remove_kubeflow; then
     attempts=5
     log "Deleting all Kubeflow resources..."
     log "Attempts remaining: $((attempts))"
-    while (( attempts > 0 )) && ! kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+    while (( attempts > 0 )) && ! delete_kubeflow; do
         attempts=$((attempts - 1))
         log "Kubeflow removal incomplete."
         log "Attempts remaining: $((attempts))"
