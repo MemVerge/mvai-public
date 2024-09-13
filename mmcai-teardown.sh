@@ -8,7 +8,7 @@ imports='
     venv.sh
 '
 for import in $imports; do
-    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/$import; then
+    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/util/$import; then
         echo "Error getting script dependency: $import"
         exit 1
     fi
@@ -324,7 +324,7 @@ if $remove_billing_database; then
     div
     log_good "Removing billing database..."
 
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/playbooks/mysql-teardown-playbook.yaml | \
+    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/mysql-teardown-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
     kubectl delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found

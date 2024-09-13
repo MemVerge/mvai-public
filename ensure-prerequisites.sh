@@ -7,7 +7,7 @@ imports='
     venv.sh
 '
 for import in $imports; do
-    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/util/$import; then
+    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/util/$import; then
         echo "Error getting script dependency: $import"
         exit 1
     fi
@@ -69,7 +69,7 @@ fi
 div
 if ! which helm; then
     log_good "Installing Helm..."
-    curl -Lf "https://raw.githubusercontent.com/helm/helm/better-logging/scripts/get-helm-3" | bash
+    curl -Lf "https://raw.githubusercontent.com/helm/helm/unified-setup/scripts/get-helm-3" | bash
 else
     log "Found Helm."
 fi

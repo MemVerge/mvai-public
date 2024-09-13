@@ -16,7 +16,7 @@ KUBEFLOW_MANIFEST='kubeflow-manifest.yaml'
 
 ensure_prerequisites() {
     local script='ensure-prerequisites.sh'
-    if ! curl -LfsSo $script https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/better-logging/$script; then
+    if ! curl -LfsSo $script https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/$script; then
         echo "Error getting script: $script"
         return 1
     fi
