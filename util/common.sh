@@ -20,6 +20,7 @@ ensure_prerequisites() {
         echo "Error getting script: $script"
         return 1
     fi
+    chmod +x $script
     ./$script
 }
 
