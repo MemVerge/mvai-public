@@ -151,6 +151,31 @@ function helm_poke() {
     return 0
 }
 
+function helm_install() {
+    ## Pull the charts via helm poke, then deploy via helm install.
+
+    if ! helm_poke ${install_repository}/mmcai-cluster; then
+        log_bad "Could not pull mmcai-cluster! Try this script again, and if the issue persists, contact support@memverge.com."
+        exit 1
+    fi
+
+    if ! helm_poke ${install_repository}/mmcai-manager; then
+        log_bad "Could not pull mmcai-manager! Try this script again, and if the issue persists, contact support@memverge.com."
+        rm -rf mmcai-cluster*
+        exit 1
+    fi
+
+    mmcai_cluster_tgz=$(ls mmcai-cluster* | head -n 1)
+    mmcai_manager_tgz=$(ls mmcai-manager* | head -n 1)
+
+    helm install $install_flags -n $NAMESPACE mmcai-cluster $mmcai_cluster_tgz \
+        --set billing.database.nodeHostname=$mysql_node_hostname
+
+    helm install $install_flags -n $NAMESPACE mmcai-manager $mmcai_manager_tgz
+
+    rm -rf $mmcai_cluster_tgz $mmcai_manager_tgz
+}
+
 function determine_install_type() {
     # mmcai-ghcr-secret may allow user to pull internal charts.
     # If so, ask user if they want to pull internal or external.
@@ -216,9 +241,4 @@ div
 log_good "Installing charts..."
 div
 
-## install latest mmc.ai system
-helm install $install_flags -n $NAMESPACE mmcai-cluster ${install_repository}/mmcai-cluster \
-    --set billing.database.nodeHostname=$mysql_node_hostname
-
-## install latest mmc.ai management
-helm install $install_flags -n $NAMESPACE mmcai-manager ${install_repository}/mmcai-manager
+helm_install
