@@ -96,23 +96,26 @@ function helm_login() {
     else
         div
         log_bad "Helm login was unsuccessful."
-        log_bad "Please provide an mmcai-ghcr-secret.yaml that allows helm login."
+        log_bad "Please provide an $MMCAI_GHCR_SECRET that allows helm login."
         div
         log "Report:"
-        cat mmcai-ghcr-secret.yaml
+        cat $MMCAI_GHCR_PATH
         div
         exit 1
     fi
 }
 
-if [[ -f "mmcai-ghcr-secret.yaml" ]]; then
-    kubectl apply -f mmcai-ghcr-secret.yaml
-    helm registry logout ghcr.io/memverge
-    helm_login
-else
-    kubectl create ns $NAMESPACE
-    kubectl create ns mmcloud-operator-system
+if ! kubectl apply -f $MMCAI_GHCR_PATH; then
+    log_bad "Applying $MMCAI_GHCR_PATH failed. Exiting..."
+    
+    sleep 1
+    
+    exit 1
 fi
+
+helm registry logout ghcr.io/memverge
+
+helm_login
 
 ## Create monitoring namespace
 
