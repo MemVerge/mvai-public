@@ -52,6 +52,36 @@ else
     log_good "Got version successfully. Proceeding with setup."
 fi
 
+function helm_login() {
+    # Extract creds.
+    secret_json=$(
+        kubectl get secret memverge-dockerconfig -n $RELEASE_NAMESPACE --output="jsonpath={.data.\.dockerconfigjson}" |
+        base64 --decode
+    )
+    secret_user=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".username')
+    secret_token=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".password')
+
+    # Attempt login.
+    if echo $secret_token | helm registry login ghcr.io/memverge -u $secret_user --password-stdin; then
+        log_good "Helm login was successful."
+    else
+        log_bad "Helm login was unsuccessful."
+        log_bad "Please provide an mmcai-ghcr-secret.yaml that allows helm login."
+        div
+        log "Content:"
+        cat mmcai-ghcr-secret.yaml
+        div
+        exit 1
+    fi
+}
+
+if [[ -f "mmcai-ghcr-secret.yaml" ]]; then
+    div
+    kubectl apply -f mmcai-ghcr-secret.yaml
+    helm registry logout ghcr.io/memverge
+    helm_login
+    div
+
 if kubectl get secret -n $RELEASE_NAMESPACE memverge-dockerconfig; then
     release_namespace_image_pull_secrets_detected=true
 else
@@ -415,7 +445,7 @@ if $install_mmcai_cluster; then
             --from-literal=mysql-replication-password=$MYSQL_ROOT_PASSWORD
     fi
 
-    helm install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster \
+    helm install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
         --set billing.database.nodeHostname=$MYSQL_NODE_HOSTNAME \
         --debug
 fi
@@ -423,5 +453,5 @@ fi
 if $install_mmcai_manager; then
     div
     log_good "Installing MMC.AI Manager..."
-    helm install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --debug
+    helm install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug
 fi
