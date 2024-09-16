@@ -1,6 +1,19 @@
 #!/bin/bash
 
-set -euo pipefail
+set -uo pipefail
+
+ignore_errors=false
+
+while getopts "i" option; do
+    case $option in
+        i ) ignore_errors=true;;
+        * ) echo "Invalid option. Use -i to ignore errors."
+    esac
+done
+
+if ! $ignore_errors; then
+    set -e
+fi
 
 imports='
     common.sh
