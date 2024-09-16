@@ -65,21 +65,21 @@ else
     log_good "Got version successfully. Proceeding with setup."
 fi
 
-function helm_login() {
+helm_login() {
     # Extract creds.
-    secret_json=$(
+    local secret_json=$(
         kubectl get secret memverge-dockerconfig -n $RELEASE_NAMESPACE --output="jsonpath={.data.\.dockerconfigjson}" |
         base64 --decode
     )
-    secret_user=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".username')
-    secret_token=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".password')
+    local secret_user=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".username')
+    local secret_token=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".password')
 
     # Attempt login.
     if echo $secret_token | helm registry login ghcr.io/memverge -u $secret_user --password-stdin; then
         log_good "Helm login was successful."
     else
         log_bad "Helm login was unsuccessful."
-        log_bad "Please provide an mmcai-ghcr-secret.yaml that allows helm login."
+        echo "Please provide an mmcai-ghcr-secret.yaml that allows helm login."
         div
         log "Content:"
         cat mmcai-ghcr-secret.yaml
@@ -94,6 +94,7 @@ if [[ -f "mmcai-ghcr-secret.yaml" ]]; then
     helm registry logout ghcr.io/memverge
     helm_login
     div
+fi
 
 if kubectl get secret -n $RELEASE_NAMESPACE memverge-dockerconfig; then
     release_namespace_image_pull_secrets_detected=true
