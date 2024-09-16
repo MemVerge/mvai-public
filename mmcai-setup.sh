@@ -5,10 +5,59 @@ source logging.sh
 ## welcome message
 
 div
-log "Welcome to MMC.AI setup!"
+log_good "Welcome to MMC.AI setup!"
 div
 
 NAMESPACE="mmcai-system"
+MMCAI_GHCR_PATH="./mmcai-ghcr-secret.yaml"
+
+function usage() {
+    div
+    echo "$0 [-f yaml]: MMC.AI setup wizard."
+    echo "    -f: takes a path to ${SECRET_YAML}."
+    echo "        By default, the script checks if ${SECRET_YAML} exists in the current directory."
+    echo "        If not, then this argument must be provided."
+    div
+}
+
+function get_opts() {
+    while getopts "f:" opt; do
+    case $opt in
+        f)
+            MMCAI_GHCR_PATH="$OPTARG"
+            ;;
+        \?)
+            log_bad "Invalid option: -$OPTARG" >&2
+            usage
+            exit 1
+            ;;
+        :)
+            log_bad "Option -$OPTARG requires an argument." >&2
+            usage
+            exit 1
+            ;;
+    esac
+    done
+}
+
+function find_secret() {
+    if [ -f "$MMCAI_GHCR_PATH" ]; then
+        log "Found mmcai-ghcr-secret.yaml in $MMCAI_GHCR_PATH. Continuing..."
+        return
+    fi
+
+    log_bad "Could not find mmcai-ghcr-secret.yaml. Exiting..."
+    
+    sleep 1
+    
+    usage
+
+    exit 1
+}
+
+get_opts
+
+find_secret
 
 div
 log_good "Please provide information for billing database:"
