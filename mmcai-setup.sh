@@ -400,7 +400,6 @@ log_good "Beginning setup..."
 ################################################################################
 
 if $install_cert_manager; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-cert-manager.log"
     set_log_file $LOG_FILE
@@ -413,7 +412,6 @@ if $install_cert_manager; then
 fi
 
 if $install_kubeflow; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-kubeflow.log"
     set_log_file $LOG_FILE
@@ -434,7 +432,6 @@ if $install_kubeflow; then
 fi
 
 if $install_nvidia_gpu_operator; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-nvidia-gpu-operator.log"
     set_log_file $LOG_FILE
@@ -446,7 +443,6 @@ if $install_nvidia_gpu_operator; then
 fi
 
 if $install_mmcai_cluster; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-mmcai-cluster.log"
     set_log_file $LOG_FILE
@@ -477,7 +473,6 @@ if $install_mmcai_cluster; then
 fi
 
 if $install_mmcai_manager; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-mmcai-manager.log"
     set_log_file $LOG_FILE

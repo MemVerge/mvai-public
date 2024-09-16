@@ -49,9 +49,6 @@ set_log_file() {
     return 1
   fi
   # Capture STDOUT and STDERR to a log file, and display to the terminal.
-  exec &> >(tee -a "$log_file")
-}
-
-unset_log_file() {
   exec &> /dev/tty
+  exec &> >(tee -a "$log_file")
 }

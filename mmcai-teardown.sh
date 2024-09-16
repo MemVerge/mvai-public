@@ -262,7 +262,6 @@ log_good "Beginning teardown..."
 ################################################################################
 
 if $remove_mmcai_manager; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-mmcai-manager.log"
     set_log_file $LOG_FILE
@@ -271,7 +270,6 @@ if $remove_mmcai_manager; then
 fi
 
 if $remove_cluster_resources; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-cluster-resources.log"
     set_log_file $LOG_FILE
@@ -362,7 +360,6 @@ if $remove_cluster_resources; then
 fi
 
 if $remove_mmcai_cluster; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-mmcai-cluster.log"
     set_log_file $LOG_FILE
@@ -379,7 +376,6 @@ if $remove_mmcai_cluster; then
 fi
 
 if $remove_billing_database; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-billing-database.log"
     set_log_file $LOG_FILE
@@ -392,7 +388,6 @@ if $remove_billing_database; then
 fi
 
 if $remove_memverge_secrets; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-memverge-secrets.log"
     set_log_file $LOG_FILE
@@ -402,7 +397,6 @@ if $remove_memverge_secrets; then
 fi
 
 if $remove_namespaces; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-namespaces.log"
     set_log_file $LOG_FILE
@@ -412,7 +406,6 @@ if $remove_namespaces; then
 fi
 
 if $remove_nvidia_gpu_operator; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-nvidia-gpu-operator.log"
     set_log_file $LOG_FILE
@@ -442,7 +435,6 @@ if $remove_nvidia_gpu_operator; then
 fi
 
 if $remove_prometheus_crds_namespace; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-prometheus-crds-namespace.log"
     set_log_file $LOG_FILE
@@ -473,7 +465,6 @@ delete_kubeflow() {
 }
 
 if $remove_kubeflow; then
-    unset_log_file
     div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-kubeflow.log"
     set_log_file $LOG_FILE
