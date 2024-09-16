@@ -280,7 +280,7 @@ if $remove_cluster_resources; then
                         if ! resources=$(kubectl get -n $namespace $cluster_resource_crd -o custom-columns=:.metadata.name); then
                             log_bad "Unhandled error getting $cluster_resource_crd resources in namespace $namespace. May loop infinitely."
                             sleep 1
-                        elif ! [[ -z "$resources" ]]; then
+                        elif [[ -n "$resources" ]]; then
                             if ! kubectl patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]'; then
                                 log_bad "Unhandled error patching $cluster_resource_crd resources in namespace $namespace. May loop infinitely."
                                 sleep 1
@@ -312,7 +312,7 @@ if $remove_cluster_resources; then
     for cluster_resource_crd in $cluster_resource_crds; do
         if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
             log_bad "CRD $cluster_resource_crd may not have been removed successfully."
-        elif ! [ -z "$get_crd_output" ]; then
+        elif [[ -n "$get_crd_output" ]]; then
             log_bad "CRD $cluster_resource_crd was not removed successfully."
         fi
     done
@@ -363,7 +363,7 @@ if $remove_nvidia_gpu_operator; then
     kubectl delete crd nvidiadrivers.nvidia.com --ignore-not-found
 
     if cluster_policies=$(kubectl get clusterpolicies -o custom-columns=:.metadata.name) \
-    && ! [ -z "$cluster_policies" ]
+    && [[ -n "$cluster_policies" ]]
     then
         if ! kubectl delete clusterpolicies $cluster_policies --ignore-not-found; then
             log_bad "NVIDIA cluster policies may not have been removed successfully."
