@@ -262,17 +262,19 @@ log_good "Beginning teardown..."
 ################################################################################
 
 if $remove_mmcai_manager; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-mmcai-manager.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing MMC.AI Manager..."
     helm uninstall -n $RELEASE_NAMESPACE mmcai-manager --ignore-not-found --debug
 fi
 
 if $remove_cluster_resources; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-cluster-resources.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing cluster resources..."
 
     cluster_resource_crds='
@@ -360,9 +362,10 @@ if $remove_cluster_resources; then
 fi
 
 if $remove_mmcai_cluster; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-mmcai-cluster.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing MMC.AI Cluster..."
     echo "If you selected to remove cluster resources, disregard below messages that resources are kept due to the resource policy:"
     ## If no service account, run helm uninstall without the engine cleanup hook.
@@ -376,9 +379,10 @@ if $remove_mmcai_cluster; then
 fi
 
 if $remove_billing_database; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-billing-database.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing billing database..."
 
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/mysql-teardown-playbook.yaml | \
@@ -388,27 +392,30 @@ if $remove_billing_database; then
 fi
 
 if $remove_memverge_secrets; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-memverge-secrets.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing MemVerge image pull secrets..."
     kubectl delete secret -n $RELEASE_NAMESPACE memverge-dockerconfig --ignore-not-found
     kubectl delete secret -n $MMCLOUD_OPERATOR_NAMESPACE memverge-dockerconfig --ignore-not-found
 fi
 
 if $remove_namespaces; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-namespaces.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing MMC.AI namespaces..."
     kubectl delete namespace $RELEASE_NAMESPACE --ignore-not-found
     kubectl delete namespace mmcloud-operator-system --ignore-not-found
 fi
 
 if $remove_nvidia_gpu_operator; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-nvidia-gpu-operator.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing NVIDIA GPU Operator..."
 
     # The order is important here.
@@ -435,9 +442,10 @@ if $remove_nvidia_gpu_operator; then
 fi
 
 if $remove_prometheus_crds_namespace; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-prometheus-crds-namespace.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing Prometheus CRDs and namespace..."
     prometheus_crds='
         alertmanagerconfigs.monitoring.coreos.com
@@ -465,9 +473,10 @@ delete_kubeflow() {
 }
 
 if $remove_kubeflow; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-kubeflow.log"
     set_log_file $LOG_FILE
-    div
     log_good "Removing Kubeflow..."
 
     build_kubeflow $TEMP_DIR

@@ -399,9 +399,10 @@ log_good "Beginning setup..."
 ################################################################################
 
 if $install_cert_manager; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-cert-manager.log"
     set_log_file $LOG_FILE
-    div
     log_good "Installing cert-manager..."
     helm repo add jetstack https://charts.jetstack.io
     helm repo update
@@ -411,9 +412,10 @@ if $install_cert_manager; then
 fi
 
 if $install_kubeflow; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-kubeflow.log"
     set_log_file $LOG_FILE
-    div
     log_good "Installing Kubeflow..."
 
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/sysctl-playbook.yaml | \
@@ -431,9 +433,10 @@ if $install_kubeflow; then
 fi
 
 if $install_nvidia_gpu_operator; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-nvidia-gpu-operator.log"
     set_log_file $LOG_FILE
-    div
     log_good "Installing NVIDIA GPU Operator..."
     helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
     helm repo update
@@ -442,9 +445,10 @@ if $install_nvidia_gpu_operator; then
 fi
 
 if $install_mmcai_cluster; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-mmcai-cluster.log"
     set_log_file $LOG_FILE
-    div
     log_good "Installing MMC.AI Cluster..."
 
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/mysql-setup-playbook.yaml | \
@@ -472,9 +476,10 @@ if $install_mmcai_cluster; then
 fi
 
 if $install_mmcai_manager; then
+    unset_log_file
+    div
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-mmcai-manager.log"
     set_log_file $LOG_FILE
-    div
     log_good "Installing MMC.AI Manager..."
     helm install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug
 fi
