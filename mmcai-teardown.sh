@@ -255,7 +255,7 @@ if $remove_cluster_resources; then
     if $force_if_remove_cluster_resources; then
         log "Force removing cluster resources..."
         for cluster_resource_crd in $cluster_resource_crds; do
-            log "Removing $cluster_resource_crds resources..."
+            log "Removing $cluster_resource_crd resources..."
 
             if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
                 error_or_found=true
