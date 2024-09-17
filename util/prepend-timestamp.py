@@ -5,10 +5,10 @@ chars = []
 prev = ""
 while True:
     char = stdin.read(1)
-    if char != "\x00":
-        chars.append(char)
     if char == "":
         chars.append("\n")
+    elif char != "\x00":
+        chars.append(char)
 
     if char in {"", "\x00", "\n"}:
         timestamp = datetime.now().isoformat(timespec="microseconds")
