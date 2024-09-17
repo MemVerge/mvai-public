@@ -30,6 +30,8 @@ done
 
 ensure_prerequisites
 
+log_good "Script dependencies satisfied."
+
 MMAI_TEARDOWN_LOG_DIR="mmai-teardown-$(file_timestamp)"
 mkdir -p $MMAI_TEARDOWN_LOG_DIR
 LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/mmai-teardown.log"
@@ -45,6 +47,8 @@ trap cleanup EXIT
 cvenv $ANSIBLE_VENV || true
 avenv $ANSIBLE_VENV
 pip install -q ansible
+
+log_good "venv $ANSIBLE_VENV set up."
 
 ################################################################################
 
@@ -91,7 +95,7 @@ fi
 # Remove mmcai-cluster?
 if $mmcai_cluster_detected; then
     div
-    if prompt_default_yn "Remove MMC.AI Cluster [y/N]:" n; then
+    if input_default_yn "Remove MMC.AI Cluster [y/N]:" n; then
         remove_mmcai_cluster=true
     else
         remove_mmcai_cluster=false
@@ -113,7 +117,7 @@ if $mmcai_manager_detected; then
         remove_mmcai_manager=true
     else
         div
-        if prompt_default_yn "Remove MMC.AI Manager [y/N]:" n; then
+        if input_default_yn "Remove MMC.AI Manager [y/N]:" n; then
             remove_mmcai_manager=true
         else
             remove_mmcai_manager=false
@@ -137,14 +141,14 @@ if $no_mmcai_cluster; then
     fi
 
     echo_red "Caution: This will cause data loss!"
-    if prompt_default_yn "Remove cluster resources (e.g. node groups, departments, projects, workloads) [y/N]:" n; then
+    if input_default_yn "Remove cluster resources (e.g. node groups, departments, projects, workloads) [y/N]:" n; then
         remove_cluster_resources=true
     else
         remove_cluster_resources=false
     fi
 
     if $remove_cluster_resources && $mmcai_cluster_detected; then
-        if prompt_default_yn "Force? This may result in an unclean state [y/N]:" n; then
+        if input_default_yn "Force? This may result in an unclean state [y/N]:" n; then
             force_if_remove_cluster_resources=true
         else
             force_if_remove_cluster_resources=false
@@ -155,7 +159,7 @@ if $no_mmcai_cluster; then
     # Remove billing database?
     div
     echo_red "Caution: This will cause data loss!"
-    if prompt_default_yn "Remove billing database [y/N]:" n; then
+    if input_default_yn "Remove billing database [y/N]:" n; then
         remove_billing_database=true
     else
         remove_billing_database=false
@@ -164,7 +168,7 @@ if $no_mmcai_cluster; then
         echo "Provide an Ansible inventory of nodes (Ansible host group [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP]) to remove billing databases from."
         ANSIBLE_INVENTORY=''
         until [[ -e "$ANSIBLE_INVENTORY" ]]; do
-            read -p "Ansible inventory: " ANSIBLE_INVENTORY
+            input "Ansible inventory: " ANSIBLE_INVENTORY
             if ! [[ -e "$ANSIBLE_INVENTORY" ]]; then
                 log_bad "Path does not exist."
             fi
@@ -173,7 +177,7 @@ if $no_mmcai_cluster; then
 
     # Remove MemVerge image pull secrets?
     div
-    if prompt_default_yn "Remove MemVerge image pull secrets [y/N]:" n; then
+    if input_default_yn "Remove MemVerge image pull secrets [y/N]:" n; then
         remove_memverge_secrets=true
     else
         remove_memverge_secrets=false
@@ -186,7 +190,7 @@ if $no_mmcai_cluster; then
     then
         div
         echo_red "Caution: This is dangerous!"
-        if prompt_default_yn "Remove MMC.AI namespaces [y/N]:" n; then
+        if input_default_yn "Remove MMC.AI namespaces [y/N]:" n; then
             remove_namespaces=true
         else
             remove_namespaces=false
@@ -197,7 +201,7 @@ if $no_mmcai_cluster; then
     # Remove Prometheus CRDs and namespace?
     div
     echo_red "Caution: This is dangerous!"
-    if prompt_default_yn "Remove Prometheus CRDs and namespace (MMC.AI included dependency) [y/N]:" n; then
+    if input_default_yn "Remove Prometheus CRDs and namespace (MMC.AI included dependency) [y/N]:" n; then
         remove_prometheus_crds_namespace=true
     else
         remove_prometheus_crds_namespace=false
@@ -207,7 +211,7 @@ if $no_mmcai_cluster; then
     # Remove NVIDIA GPU Operator?
     div
     echo_red "Caution: This is dangerous!"
-    if prompt_default_yn "Remove NVIDIA GPU Operator (MMC.AI standalone dependency) [y/N]:" n; then
+    if input_default_yn "Remove NVIDIA GPU Operator (MMC.AI standalone dependency) [y/N]:" n; then
         remove_nvidia_gpu_operator=true
     else
         remove_nvidia_gpu_operator=false
@@ -217,7 +221,7 @@ if $no_mmcai_cluster; then
     # Remove Kubeflow?
     div
     echo_red "Caution: This is dangerous!"
-    if prompt_default_yn "Remove Kubeflow (MMC.AI standalone dependency) [y/N]:" n; then
+    if input_default_yn "Remove Kubeflow (MMC.AI standalone dependency) [y/N]:" n; then
         remove_kubeflow=true
     else
         remove_kubeflow=false
@@ -244,7 +248,7 @@ echo "NVIDIA GPU Operator:" $remove_nvidia_gpu_operator
 echo "Kubeflow:" $remove_kubeflow
 
 div
-if prompt_default_yn "Confirm selection [y/N]:" n; then
+if input_default_yn "Confirm selection [y/N]:" n; then
     confirm_selection=true
 else
     confirm_selection=false

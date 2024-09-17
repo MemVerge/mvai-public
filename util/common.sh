@@ -27,12 +27,30 @@ ensure_prerequisites() {
     ./$script
 }
 
-prompt_default_yn() {
+input() {
+    local prompt="$1"
+    local variable="$2"
+    echo -ne "$prompt\x00"
+    read "$variable"
+    echo ''
+}
+
+input_secret() {
+    local prompt="$1"
+    local variable="$2"
+    echo -ne "$prompt\x00"
+    read -s "$variable"
+    echo ''
+}
+
+input_default_yn() {
     local prompt="$1"
     local default="$2"
     local response
     while true; do
-        read -p "$prompt" response
+        echo -ne "$prompt\x00"
+        read response
+        echo ''
         if [[ -z "$response" ]]; then
             response="$default"
         fi

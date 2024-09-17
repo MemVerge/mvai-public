@@ -30,6 +30,8 @@ done
 
 ensure_prerequisites
 
+log_good "Script dependencies satisfied."
+
 MMAI_SETUP_LOG_DIR="mmai-setup-$(file_timestamp)"
 mkdir -p $MMAI_SETUP_LOG_DIR
 LOG_FILE="$MMAI_SETUP_LOG_DIR/mmai-setup.log"
@@ -45,6 +47,8 @@ trap cleanup EXIT
 cvenv $ANSIBLE_VENV || true
 avenv $ANSIBLE_VENV
 pip install -q ansible
+
+log_good "venv $ANSIBLE_VENV set up."
 
 ################################################################################
 
@@ -162,7 +166,7 @@ fi
 # Install mmcai-manager?
 if ! mmcai_manager_detected; then
     div
-    if prompt_default_yn "Install MMC.AI Manager [y/N]:" n; then
+    if input_default_yn "Install MMC.AI Manager [y/N]:" n; then
         install_mmcai_manager=true
     else
         install_mmcai_manager=false
@@ -177,7 +181,7 @@ fi
 
 while $be_mmcai_manager && cert_manager_detected && ! kubeflow_detected; do
     echo "MMC.AI Manager requires Kubeflow, which provides cert-manager. Please uninstall existing cert-manager before continuing if you wish to install MMC.AI Manager."
-    if prompt_default_yn "Continue setup [Y/n]:" y; then
+    if input_default_yn "Continue setup [Y/n]:" y; then
         continue_setup=true
     else
         continue_setup=false
@@ -202,7 +206,7 @@ if ! mmcai_cluster_detected; then
         install_mmcai_cluster=true
     else
         div
-        if prompt_default_yn "Install MMC.AI Cluster [y/N]:" n; then
+        if input_default_yn "Install MMC.AI Cluster [y/N]:" n; then
             install_mmcai_cluster=true
         else
             install_mmcai_cluster=false
@@ -218,7 +222,7 @@ fi
 
 if $install_mmcai_cluster && nvidia_gpu_operator_detected; then
     echo "MMC.AI Cluster requires NVIDIA GPU Operator installed with a specific configuration. If existing NVIDIA GPU Operator was not installed using this script, please uninstall existing NVIDIA GPU Operator before continuing."
-    if prompt_default_yn "Continue setup [Y/n]:" y; then
+    if input_default_yn "Continue setup [Y/n]:" y; then
         continue_setup=true
     else
         continue_setup=false
@@ -240,7 +244,7 @@ if ! nvidia_gpu_operator_detected; then
         install_nvidia_gpu_operator=true
     else
         div
-        if prompt_default_yn "Install NVIDIA GPU Operator [y/N]:" n; then
+        if input_default_yn "Install NVIDIA GPU Operator [y/N]:" n; then
             install_nvidia_gpu_operator=true
         else
             install_nvidia_gpu_operator=false
@@ -250,7 +254,7 @@ fi
 
 if $install_mmcai_manager && kubeflow_detected; then
     echo "MMC.AI Manager requires Kubeflow installed with a specific configuration. If existing Kubeflow was not installed using this script, please uninstall existing Kubeflow before continuing."
-    if prompt_default_yn "Continue setup [Y/n]:" y; then
+    if input_default_yn "Continue setup [Y/n]:" y; then
         continue_setup=true
     else
         continue_setup=false
@@ -272,7 +276,7 @@ if ! kubeflow_detected; then
         install_kubeflow=true
     else
         div
-        if prompt_default_yn "Install Kubeflow [y/N]:" n; then
+        if input_default_yn "Install Kubeflow [y/N]:" n; then
             install_kubeflow=true
         else
             install_kubeflow=false
@@ -293,7 +297,7 @@ if ! $be_kubeflow && ! cert_manager_detected; then
         install_cert_manager=true
     else
         div
-        if prompt_default_yn "Install cert-manager (Helm chart) [y/N]:" n; then
+        if input_default_yn "Install cert-manager (Helm chart) [y/N]:" n; then
             install_cert_manager=true
         else
             install_cert_manager=false
@@ -312,7 +316,7 @@ if $install_mmcai_cluster || $install_kubeflow; then
         if $install_mmcai_cluster; then
             echo "- [$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP] (used if installing MMC.AI Cluster)"
         fi
-        read -p "Ansible inventory: " ANSIBLE_INVENTORY
+        input "Ansible inventory: " ANSIBLE_INVENTORY
         if ! [[ -e "$ANSIBLE_INVENTORY" ]]; then
             log_bad "Path does not exist."
         fi
@@ -323,7 +327,7 @@ if $install_mmcai_cluster || $install_kubeflow; then
         while (( $(echo $MYSQL_NODE_HOSTNAME | wc -w) != 1 )); do
             log_bad "Wrong number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes in Ansible inventory."
             echo "Number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes must be 1. Please fix Ansible inventory before continuing."
-            if prompt_default_yn "Continue setup [Y/n]:" y; then
+            if input_default_yn "Continue setup [Y/n]:" y; then
                 continue_setup=true
             else
                 continue_setup=false
@@ -343,7 +347,7 @@ if $install_mmcai_cluster || $install_kubeflow; then
 
         if $mysql_secret_exists; then
             echo "Reuse existing billing database secret? If N/n, the existing database secret will be overwritten."
-            if prompt_default_yn "Reuse existing secret [Y/n]:" y; then
+            if input_default_yn "Reuse existing secret [Y/n]:" y; then
                 create_mysql_secret=false
             else
                 create_mysql_secret=true
@@ -357,10 +361,8 @@ if $install_mmcai_cluster || $install_kubeflow; then
             MYSQL_ROOT_PASSWORD=''
             MYSQL_ROOT_PASSWORD_CONFIRMATION='nonempty'
             until [[ "$MYSQL_ROOT_PASSWORD" == "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]]; do
-                read -sp "Billing database root password:" MYSQL_ROOT_PASSWORD
-                echo
-                read -sp "Confirm database root password:" MYSQL_ROOT_PASSWORD_CONFIRMATION
-                echo
+                input_secret "Billing database root password:" MYSQL_ROOT_PASSWORD
+                input_secret "Confirm database root password:" MYSQL_ROOT_PASSWORD_CONFIRMATION
                 if [[ "$MYSQL_ROOT_PASSWORD" != "$MYSQL_ROOT_PASSWORD_CONFIRMATION" ]]; then
                     log_bad "Passwords do not match."
                 fi
@@ -382,7 +384,7 @@ echo "Kubeflow:" $install_kubeflow
 echo "cert-manager:" $install_cert_manager
 
 div
-if prompt_default_yn "Confirm selection [y/N]:" n; then
+if input_default_yn "Confirm selection [y/N]:" n; then
     confirm_selection=true
 else
     confirm_selection=false
