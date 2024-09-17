@@ -28,14 +28,14 @@ for import in $imports; do
     source $import
 done
 
-ensure_prerequisites
-
-log_good "Script dependencies satisfied."
-
 MMAI_SETUP_LOG_DIR="mmai-setup-$(file_timestamp)"
 mkdir -p $MMAI_SETUP_LOG_DIR
 LOG_FILE="$MMAI_SETUP_LOG_DIR/mmai-setup.log"
 set_log_file $LOG_FILE
+
+ensure_prerequisites
+
+log_good "Script dependencies satisfied."
 
 TEMP_DIR=$(mktemp -d)
 cleanup() {
