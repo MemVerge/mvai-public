@@ -69,7 +69,7 @@ fi
 div
 if ! which helm; then
     log_good "Installing Helm..."
-    curl -Lf "https://raw.githubusercontent.com/helm/helm/unified-setup/scripts/get-helm-3" | bash
+    curl -Lf "https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3" | bash
 else
     log "Found Helm."
 fi
