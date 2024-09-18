@@ -17,6 +17,13 @@ ANSIBLE_INVENTORY_DATABASE_NODE_GROUP='mmai_database'
 
 KUBEFLOW_MANIFEST='kubeflow-manifest.yaml'
 
+BIN_DIR='/usr/local/bin'
+KUBECTL="$BIN_DIR/kubectl"
+KUSTOMIZE="$BIN_DIR/kustomize"
+HELM="$BIN_DIR/helm"
+JQ="$BIN_DIR/jq"
+YQ="$BIN_DIR/yq"
+
 ensure_prerequisites() {
     local script='ensure-prerequisites.sh'
     if ! curl -LfsSo $script https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/$script; then
@@ -84,5 +91,5 @@ build_kubeflow() {
     sed -i 's:VWA_APP_SECURE_COOKIES=true:VWA_APP_SECURE_COOKIES=false:' "$base_dir/kubeflow/apps/volumes-web-app/upstream/base/params.env"
     sed -i 's:TWA_APP_SECURE_COOKIES=true:TWA_APP_SECURE_COOKIES=false:' "$base_dir/kubeflow/apps/tensorboard/tensorboards-web-app/upstream/base/params.env"
 
-    kustomize build $base_dir/kubeflow/example > $base_dir/$KUBEFLOW_MANIFEST
+    "$KUSTOMIZE" build $base_dir/kubeflow/example > $base_dir/$KUBEFLOW_MANIFEST
 }

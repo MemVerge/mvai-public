@@ -62,7 +62,7 @@ confirm_selection=false
 
 # Sanity check.
 log "Getting Kubernetes version to check connectivity."
-if ! kubectl version; then
+if ! "$KUBECTL" version; then
     log_bad "Error getting version. Cannot proceed with setup."
     exit 1
 else
@@ -72,18 +72,18 @@ fi
 helm_login() {
     # Extract creds.
     local secret_json=$(
-        kubectl get secret memverge-dockerconfig -n $RELEASE_NAMESPACE --output="jsonpath={.data.\.dockerconfigjson}" |
+        "$KUBECTL" get secret memverge-dockerconfig -n $RELEASE_NAMESPACE --output="jsonpath={.data.\.dockerconfigjson}" |
         base64 --decode
     )
-    local secret_user=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".username')
-    local secret_token=$(echo ${secret_json} | jq -r '.auths."ghcr.io/memverge".password')
+    local secret_user=$(echo ${secret_json} | "$JQ" -r '.auths."ghcr.io/memverge".username')
+    local secret_token=$(echo ${secret_json} | "$JQ" -r '.auths."ghcr.io/memverge".password')
 
     # Attempt login.
-    if echo $secret_token | helm registry login ghcr.io/memverge -u $secret_user --password-stdin; then
+    if echo $secret_token | "$HELM" registry login ghcr.io/memverge -u $secret_user --password-stdin; then
         log_good "Helm login was successful."
     else
         log_bad "Helm login was unsuccessful."
-        echo "Please provide an mmcai-ghcr-secret.yaml that allows helm login."
+        echo "Please provide an mmcai-ghcr-secret.yaml that allows Helm login."
         div
         log "Content:"
         cat mmcai-ghcr-secret.yaml
@@ -94,20 +94,20 @@ helm_login() {
 
 if [[ -f "mmcai-ghcr-secret.yaml" ]]; then
     div
-    kubectl apply -f mmcai-ghcr-secret.yaml
-    helm registry logout ghcr.io/memverge
+    "$KUBECTL" apply -f mmcai-ghcr-secret.yaml
+    "$HELM" registry logout ghcr.io/memverge
     helm_login
     div
 fi
 
-if kubectl get secret -n $RELEASE_NAMESPACE memverge-dockerconfig; then
+if "$KUBECTL" get secret -n $RELEASE_NAMESPACE memverge-dockerconfig; then
     release_namespace_image_pull_secrets_detected=true
 else
     release_namespace_image_pull_secrets_detected=false
     log_bad "MemVerge image pull secret in namespace $RELEASE_NAMESPACE not detected."
 fi
 
-if kubectl get secret -n $MMCLOUD_OPERATOR_NAMESPACE memverge-dockerconfig; then
+if "$KUBECTL" get secret -n $MMCLOUD_OPERATOR_NAMESPACE memverge-dockerconfig; then
     mmcloud_operator_namespace_image_pull_secrets_detected=true
 else
     mmcloud_operator_namespace_image_pull_secrets_detected=false
@@ -123,7 +123,7 @@ fi
 
 # Determine if cert-manager is installed.
 cert_manager_detected() {
-    kubectl get namespace cert-manager
+    "$KUBECTL" get namespace cert-manager
 }
 if ! cert_manager_detected; then
     log "cert-manager not detected."
@@ -131,7 +131,7 @@ fi
 
 # Determine if Kubeflow is installed.
 kubeflow_detected() {
-    kubectl get namespace kubeflow
+    "$KUBECTL" get namespace kubeflow
 }
 if ! kubeflow_detected; then
     log "Kubeflow not detected."
@@ -139,7 +139,7 @@ fi
 
 # Determine if nvidia-gpu-operator is installed.
 nvidia_gpu_operator_detected() {
-    helm list -n gpu-operator -a -q | grep gpu-operator
+    "$HELM" list -n gpu-operator -a -q | grep gpu-operator
 }
 if ! nvidia_gpu_operator_detected; then
     log "NVIDIA GPU Operator not detected."
@@ -147,7 +147,7 @@ fi
 
 # Determine if mmcai-cluster is installed.
 mmcai_cluster_detected() {
-    helm list -n mmcai-system -a -q | grep mmcai-cluster
+    "$HELM" list -n mmcai-system -a -q | grep mmcai-cluster
 }
 if ! mmcai_cluster_detected; then
     log "MMC.AI Cluster not detected."
@@ -155,7 +155,7 @@ fi
 
 # Determine if mmcai-manager is installed.
 mmcai_manager_detected() {
-    helm list -n mmcai-system -a -q | grep mmcai-manager
+    "$HELM" list -n mmcai-system -a -q | grep mmcai-manager
 }
 if ! mmcai_manager_detected; then
     log "MMC.AI Manager not detected."
@@ -323,7 +323,7 @@ if $install_mmcai_cluster || $install_kubeflow; then
     done
 
     if $install_mmcai_cluster; then
-        MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | jq -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
+        MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | "$JQ" -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
         while (( $(echo $MYSQL_NODE_HOSTNAME | wc -w) != 1 )); do
             log_bad "Wrong number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes in Ansible inventory."
             echo "Number of $ANSIBLE_INVENTORY_DATABASE_NODE_GROUP nodes must be 1. Please fix Ansible inventory before continuing."
@@ -335,10 +335,10 @@ if $install_mmcai_cluster || $install_kubeflow; then
             if ! $continue_setup; then
                 exit 0
             fi
-            MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | jq -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
+            MYSQL_NODE_HOSTNAME=$(ansible-inventory --list -i $ANSIBLE_INVENTORY | "$JQ" -r --arg NODE_GROUP "$ANSIBLE_INVENTORY_DATABASE_NODE_GROUP" '.[$NODE_GROUP].hosts[]?')
         done
 
-        if kubectl get secret -n $RELEASE_NAMESPACE mmai-mysql-secret &>/dev/null; then
+        if "$KUBECTL" get secret -n $RELEASE_NAMESPACE mmai-mysql-secret &>/dev/null; then
             mysql_secret_exists=true
             log "Existing billing database secret found."
         else
@@ -406,9 +406,9 @@ if $install_cert_manager; then
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-cert-manager.log"
     set_log_file $LOG_FILE
     log_good "Installing cert-manager..."
-    helm repo add jetstack https://charts.jetstack.io
-    helm repo update
-    helm install --wait --create-namespace -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
+    "$HELM" repo add jetstack https://charts.jetstack.io
+    "$HELM" repo update
+    "$HELM" install --wait --create-namespace -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
       --set crds.enabled=true \
       --debug
 fi
@@ -425,7 +425,7 @@ if $install_kubeflow; then
     build_kubeflow $TEMP_DIR
 
     log "Applying all Kubeflow resources..."
-    while ! kubectl apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+    while ! "$KUBECTL" apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
         log "Kubeflow installation incomplete."
         log "Waiting 15 seconds before attempt..."
         sleep 15
@@ -438,10 +438,10 @@ if $install_nvidia_gpu_operator; then
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-nvidia-gpu-operator.log"
     set_log_file $LOG_FILE
     log_good "Installing NVIDIA GPU Operator..."
-    helm repo add nvidia https://helm.ngc.nvidia.com/nvidia
-    helm repo update
+    "$HELM" repo add nvidia https://helm.ngc.nvidia.com/nvidia
+    "$HELM" repo update
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/values/gpu-operator-values.yaml | \
-    helm install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f - --debug
+    "$HELM" install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f - --debug
 fi
 
 if $install_mmcai_cluster; then
@@ -454,22 +454,22 @@ if $install_mmcai_cluster; then
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
     # Create namespaces
-    kubectl get namespace $RELEASE_NAMESPACE &>/dev/null || kubectl create namespace $RELEASE_NAMESPACE
-    kubectl get namespace $MMCLOUD_OPERATOR_NAMESPACE &>/dev/null || kubectl create namespace $MMCLOUD_OPERATOR_NAMESPACE
-    kubectl get namespace $PROMETHEUS_NAMESPACE &>/dev/null || kubectl create namespace $PROMETHEUS_NAMESPACE
+    "$KUBECTL" get namespace $RELEASE_NAMESPACE &>/dev/null || "$KUBECTL" create namespace $RELEASE_NAMESPACE
+    "$KUBECTL" get namespace $MMCLOUD_OPERATOR_NAMESPACE &>/dev/null || "$KUBECTL" create namespace $MMCLOUD_OPERATOR_NAMESPACE
+    "$KUBECTL" get namespace $PROMETHEUS_NAMESPACE &>/dev/null || "$KUBECTL" create namespace $PROMETHEUS_NAMESPACE
 
     # Create MySQL secret
     if $create_mysql_secret; then
-        kubectl delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
+        "$KUBECTL" delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
 
         # While we only need mysql-root-password, all of these keys are necessary for the secret according to the mysql Helm chart documentation
-        kubectl create secret generic -n $RELEASE_NAMESPACE mmai-mysql-secret \
+        "$KUBECTL" create secret generic -n $RELEASE_NAMESPACE mmai-mysql-secret \
             --from-literal=mysql-root-password=$MYSQL_ROOT_PASSWORD \
             --from-literal=mysql-password=$MYSQL_ROOT_PASSWORD \
             --from-literal=mysql-replication-password=$MYSQL_ROOT_PASSWORD
     fi
 
-    helm install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
+    "$HELM" install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
         --set billing.database.nodeHostname=$MYSQL_NODE_HOSTNAME \
         --debug
 fi
@@ -479,5 +479,5 @@ if $install_mmcai_manager; then
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-mmcai-manager.log"
     set_log_file $LOG_FILE
     log_good "Installing MMC.AI Manager..."
-    helm install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug
+    "$HELM" install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug
 fi

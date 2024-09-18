@@ -68,7 +68,7 @@ confirm_selection=false
 
 # Sanity check.
 log "Getting version to check connectivity."
-if ! kubectl version; then
+if ! "$KUBECTL" version; then
     log_bad "Cannot proceed with teardown."
     exit 1
 else
@@ -76,14 +76,14 @@ else
 fi
 
 # Determine if mmcai-cluster and mmcai-manager are installed.
-if helm list -n mmcai-system -a -q | grep mmcai-cluster; then
+if "$HELM" list -n mmcai-system -a -q | grep mmcai-cluster; then
     mmcai_cluster_detected=true
 else
     mmcai_cluster_detected=false
     log "MMC.AI Cluster not detected."
 fi
 
-if helm list -n mmcai-system -a -q | grep mmcai-manager; then
+if "$HELM" list -n mmcai-system -a -q | grep mmcai-manager; then
     mmcai_manager_detected=true
 else
     mmcai_manager_detected=false
@@ -270,7 +270,7 @@ if $remove_mmcai_manager; then
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-mmcai-manager.log"
     set_log_file $LOG_FILE
     log_good "Removing MMC.AI Manager..."
-    helm uninstall -n $RELEASE_NAMESPACE mmcai-manager --ignore-not-found --debug
+    "$HELM" uninstall -n $RELEASE_NAMESPACE mmcai-manager --ignore-not-found --debug
 fi
 
 if $remove_cluster_resources; then
@@ -293,7 +293,7 @@ if $remove_cluster_resources; then
     '
 
     log "Requesting CRD deletion..."
-    kubectl delete crd $cluster_resource_crds --ignore-not-found &
+    "$KUBECTL" delete crd $cluster_resource_crds --ignore-not-found &
     cluster_resource_crds_removed=$!
 
     if $force_if_remove_cluster_resources; then
@@ -301,7 +301,7 @@ if $remove_cluster_resources; then
         for cluster_resource_crd in $cluster_resource_crds; do
             log "Removing $cluster_resource_crd resources..."
 
-            if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
+            if ! get_crd_output=$("$KUBECTL" get crd $cluster_resource_crd --ignore-not-found); then
                 error_or_found=true
             elif [[ -z "$get_crd_output" ]]; then
                 error_or_found=false
@@ -310,9 +310,9 @@ if $remove_cluster_resources; then
             fi
 
             while $error_or_found; do
-                namespaces=$(kubectl get namespaces -o custom-columns=:.metadata.name)
+                namespaces=$("$KUBECTL" get namespaces -o custom-columns=:.metadata.name)
                 for namespace in $namespaces; do
-                    if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
+                    if ! get_crd_output=$("$KUBECTL" get crd $cluster_resource_crd --ignore-not-found); then
                         error_or_found=true
                         log_bad "Unhandled error getting CRD $cluster_resource_crd. May loop infinitely."
                         sleep 1
@@ -321,15 +321,15 @@ if $remove_cluster_resources; then
                     else
                         error_or_found=true
                         # This should work for cluster-wide resources.
-                        if ! resources=$(kubectl get -n $namespace $cluster_resource_crd -o custom-columns=:.metadata.name); then
+                        if ! resources=$("$KUBECTL" get -n $namespace $cluster_resource_crd -o custom-columns=:.metadata.name); then
                             log_bad "Unhandled error getting $cluster_resource_crd resources in namespace $namespace. May loop infinitely."
                             sleep 1
                         elif [[ -n "$resources" ]]; then
-                            if ! kubectl patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]'; then
+                            if ! "$KUBECTL" patch $cluster_resource_crd -n $namespace $resources --type json --patch='[{ "op": "remove", "path": "/metadata/finalizers" }]'; then
                                 log_bad "Unhandled error patching $cluster_resource_crd resources in namespace $namespace. May loop infinitely."
                                 sleep 1
                             fi
-                        elif ! all_resources=$(kubectl get $cluster_resource_crd -A --ignore-not-found); then
+                        elif ! all_resources=$("$KUBECTL" get $cluster_resource_crd -A --ignore-not-found); then
                             log_bad "Unhandled error getting all $cluster_resource_crd resources in cluster. May loop infinitely."
                             sleep 1
                         elif [[ -z "$all_resources" ]]; then
@@ -343,10 +343,10 @@ if $remove_cluster_resources; then
     fi
 
     # Get all mmc.ai labels attached to nodes
-    node_labels=$(kubectl get nodes -o json | jq -r '.items[].metadata.labels | keys[]')
+    node_labels=$("$KUBECTL" get nodes -o json | "$JQ" -r '.items[].metadata.labels | keys[]')
     if mmcai_labels=$(echo "$node_labels" | grep mmc.ai); then
         for label in $mmcai_labels; do
-            kubectl label nodes --all ${label}-
+            "$KUBECTL" label nodes --all ${label}-
         done
     fi
 
@@ -355,7 +355,7 @@ if $remove_cluster_resources; then
     fi
 
     for cluster_resource_crd in $cluster_resource_crds; do
-        if ! get_crd_output=$(kubectl get crd $cluster_resource_crd --ignore-not-found); then
+        if ! get_crd_output=$("$KUBECTL" get crd $cluster_resource_crd --ignore-not-found); then
             log_bad "CRD $cluster_resource_crd may not have been removed successfully."
         elif [[ -n "$get_crd_output" ]]; then
             log_bad "CRD $cluster_resource_crd was not removed successfully."
@@ -370,11 +370,11 @@ if $remove_mmcai_cluster; then
     log_good "Removing MMC.AI Cluster..."
     echo "If you selected to remove cluster resources, disregard below messages that resources are kept due to the resource policy:"
     ## If no service account, run helm uninstall without the engine cleanup hook.
-    if ! kubectl get serviceaccount mmcloud-operator-controller-manager -n mmcloud-operator-system &> /dev/null; then
+    if ! "$KUBECTL" get serviceaccount mmcloud-operator-controller-manager -n mmcloud-operator-system &> /dev/null; then
         log "Service account mmcloud-operator-controller-manager not found. Skipping mmcloud-engine cleanup Helm hook."
-        helm uninstall --debug --no-hooks -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found
+        "$HELM" uninstall --debug --no-hooks -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found
     else
-        helm uninstall --debug -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found
+        "$HELM" uninstall --debug -n $RELEASE_NAMESPACE mmcai-cluster --ignore-not-found
         log "Performed uninstallation with mmcloud-engine cleanup Helm hook. On success, engines.mmcloud.io CRD should be removed irrespective of resource policy."
     fi
 fi
@@ -388,7 +388,7 @@ if $remove_billing_database; then
     curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/mysql-teardown-playbook.yaml | \
     ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
 
-    kubectl delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
+    "$KUBECTL" delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
 fi
 
 if $remove_memverge_secrets; then
@@ -396,8 +396,8 @@ if $remove_memverge_secrets; then
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-memverge-secrets.log"
     set_log_file $LOG_FILE
     log_good "Removing MemVerge image pull secrets..."
-    kubectl delete secret -n $RELEASE_NAMESPACE memverge-dockerconfig --ignore-not-found
-    kubectl delete secret -n $MMCLOUD_OPERATOR_NAMESPACE memverge-dockerconfig --ignore-not-found
+    "$KUBECTL" delete secret -n $RELEASE_NAMESPACE memverge-dockerconfig --ignore-not-found
+    "$KUBECTL" delete secret -n $MMCLOUD_OPERATOR_NAMESPACE memverge-dockerconfig --ignore-not-found
 fi
 
 if $remove_namespaces; then
@@ -405,8 +405,8 @@ if $remove_namespaces; then
     LOG_FILE="$MMAI_TEARDOWN_LOG_DIR/remove-namespaces.log"
     set_log_file $LOG_FILE
     log_good "Removing MMC.AI namespaces..."
-    kubectl delete namespace $RELEASE_NAMESPACE --ignore-not-found
-    kubectl delete namespace mmcloud-operator-system --ignore-not-found
+    "$KUBECTL" delete namespace $RELEASE_NAMESPACE --ignore-not-found
+    "$KUBECTL" delete namespace mmcloud-operator-system --ignore-not-found
 fi
 
 if $remove_nvidia_gpu_operator; then
@@ -417,25 +417,25 @@ if $remove_nvidia_gpu_operator; then
 
     # The order is important here.
     # NVIDIA GPU Operator Helm chart does not create an instance of this CRD so the CRD can be deleted first.
-    kubectl delete crd nvidiadrivers.nvidia.com --ignore-not-found
+    "$KUBECTL" delete crd nvidiadrivers.nvidia.com --ignore-not-found
 
-    if cluster_policies=$(kubectl get clusterpolicies -o custom-columns=:.metadata.name) \
+    if cluster_policies=$("$KUBECTL" get clusterpolicies -o custom-columns=:.metadata.name) \
     && [[ -n "$cluster_policies" ]]
     then
-        if ! kubectl delete clusterpolicies $cluster_policies --ignore-not-found; then
+        if ! "$KUBECTL" delete clusterpolicies $cluster_policies --ignore-not-found; then
             log_bad "NVIDIA cluster policies may not have been removed successfully."
         fi
     fi
 
-    helm uninstall --debug -n gpu-operator nvidia-gpu-operator --ignore-not-found
-    kubectl delete namespace gpu-operator --ignore-not-found
+    "$HELM" uninstall --debug -n gpu-operator nvidia-gpu-operator --ignore-not-found
+    "$KUBECTL" delete namespace gpu-operator --ignore-not-found
 
     # NVIDIA GPU Operator Helm chart creates an instance of this CRD so the CRD must be deleted after.
-    kubectl delete crd clusterpolicies.nvidia.com --ignore-not-found
+    "$KUBECTL" delete crd clusterpolicies.nvidia.com --ignore-not-found
 
     # NFD
-    kubectl delete crd nodefeatures.nfd.k8s-sigs.io --ignore-not-found
-    kubectl delete crd nodefeaturerules.nfd.k8s-sigs.io --ignore-not-found
+    "$KUBECTL" delete crd nodefeatures.nfd.k8s-sigs.io --ignore-not-found
+    "$KUBECTL" delete crd nodefeaturerules.nfd.k8s-sigs.io --ignore-not-found
 fi
 
 if $remove_prometheus_crds_namespace; then
@@ -456,16 +456,16 @@ if $remove_prometheus_crds_namespace; then
         thanosrulers.monitoring.coreos.com
     '
     for crd in $prometheus_crds; do
-        kubectl delete crd $crd --ignore-not-found
+        "$KUBECTL" delete crd $crd --ignore-not-found
     done
-    kubectl delete namespace $PROMETHEUS_NAMESPACE --ignore-not-found
+    "$KUBECTL" delete namespace $PROMETHEUS_NAMESPACE --ignore-not-found
 fi
 
 delete_kubeflow() {
-    if kubectl get profiles.kubeflow.org &> /dev/null && ! kubectl delete profiles.kubeflow.org --all && kubectl get profiles.kubeflow.org; then
+    if "$KUBECTL" get profiles.kubeflow.org &> /dev/null && ! "$KUBECTL" delete profiles.kubeflow.org --all && "$KUBECTL" get profiles.kubeflow.org; then
         return 1
     fi
-    kubectl delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST
+    "$KUBECTL" delete --ignore-not-found -f $TEMP_DIR/$KUBEFLOW_MANIFEST
 }
 
 if $remove_kubeflow; then
