@@ -76,14 +76,14 @@ else
 fi
 
 # Determine if mmcai-cluster and mmcai-manager are installed.
-if "$HELM" list -n mmcai-system -a -q | grep mmcai-cluster; then
+if "$HELM" list -n $RELEASE_NAMESPACE -a -q | grep mmcai-cluster; then
     mmcai_cluster_detected=true
 else
     mmcai_cluster_detected=false
     log "MMC.AI Cluster not detected."
 fi
 
-if "$HELM" list -n mmcai-system -a -q | grep mmcai-manager; then
+if "$HELM" list -n $RELEASE_NAMESPACE -a -q | grep mmcai-manager; then
     mmcai_manager_detected=true
 else
     mmcai_manager_detected=false
