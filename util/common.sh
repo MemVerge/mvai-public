@@ -114,8 +114,8 @@ helm_manifest() {
 }
 
 get_describe_manifest_resources() {
-    if (( $# == 2 ))
-    && [[ -n "$1" ]] && [[ -f "$1" ]]
+    if (( $# == 2 )) \
+    && [[ -n "$1" ]] && [[ -f "$1" ]] \
     && [[ -n "$2" ]] && [[ -d "$2" ]]
     then
         local manifest=$1
