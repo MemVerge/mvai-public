@@ -476,17 +476,22 @@ if $remove_kubeflow; then
 
     build_kubeflow $TEMP_DIR
 
-    attempts=5
+    attempts=10
     log "Deleting all Kubeflow resources..."
     log "Attempts remaining: $((attempts))"
-    while (( attempts > 0 )) && ! delete_kubeflow; do
+    while (( attempts > 1 )) && ! delete_kubeflow; do
         attempts=$((attempts - 1))
         log "Kubeflow removal incomplete."
         log "Attempts remaining: $((attempts))"
         log "Waiting 15 seconds before attempt..."
         sleep 15
     done
-    log "Kubeflow removed."
+    if (( attempts > 1 )) || delete_kubeflow; then
+        log_good "Kubeflow removed."
+    else
+        log_bad "Error removing Kubeflow."
+        false
+    fi
 fi
 
 div

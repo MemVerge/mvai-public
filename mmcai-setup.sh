@@ -408,10 +408,12 @@ if $install_cert_manager; then
     log_good "Installing cert-manager..."
     "$HELM" repo add jetstack https://charts.jetstack.io
     "$HELM" repo update
-    if ! "$HELM" install --wait --create-namespace -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
+    if "$HELM" install --wait --create-namespace -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
         --set crds.enabled=true \
         --debug
     then
+        log_good "cert-manager installed."
+    else
         log_bad "Error installing cert-manager."
         CERT_MANAGER_LOG_DIR="$MMAI_SETUP_LOG_DIR/cert-manager"
         mkdir $CERT_MANAGER_LOG_DIR
@@ -438,13 +440,22 @@ if $install_kubeflow; then
 
     build_kubeflow $TEMP_DIR
 
+    attempts=10
     log "Applying all Kubeflow resources..."
-    while ! "$KUBECTL" apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+    log "Attempts remaining: $((attempts))"
+    while (( attempts > 1 )) && ! "$KUBECTL" apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; do
+        attempts=$((attempts - 1))
         log "Kubeflow installation incomplete."
+        log "Attempts remaining: $((attempts))"
         log "Waiting 15 seconds before attempt..."
         sleep 15
     done
-    log "Kubeflow installed."
+    if (( attempts > 1 )) || "$KUBECTL" apply -f $TEMP_DIR/$KUBEFLOW_MANIFEST; then
+        log_good "Kubeflow installed."
+    else
+        log_bad "Error installing Kubeflow."
+        false
+    fi
 fi
 
 if $install_nvidia_gpu_operator; then
@@ -457,10 +468,12 @@ if $install_nvidia_gpu_operator; then
 
     NVIDIA_GPU_OPERATOR_VALUES="$TEMP_DIR/gpu-operator-values.yaml"
     curl -LfsSo $NVIDIA_GPU_OPERATOR_VALUES https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/values/gpu-operator-values.yaml
-    if ! "$HELM" install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION \
+    if "$HELM" install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION \
         -f $NVIDIA_GPU_OPERATOR_VALUES \
         --debug
     then
+        log_good "NVIDIA GPU Operator installed."
+    else
         log_bad "Error installing NVIDIA GPU Operator."
         NVIDIA_GPU_OPERATOR_LOG_DIR="$MMAI_SETUP_LOG_DIR/nvidia-gpu-operator"
         mkdir $NVIDIA_GPU_OPERATOR_LOG_DIR
@@ -502,10 +515,12 @@ if $install_mmcai_cluster; then
             --from-literal=mysql-replication-password=$MYSQL_ROOT_PASSWORD
     fi
 
-    if ! "$HELM" install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
+    if "$HELM" install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
         --set billing.database.nodeHostname=$MYSQL_NODE_HOSTNAME \
         --debug
     then
+        log_good "MMC.AI Cluster installed."
+    else
         log_bad "Error installing MMC.AI Cluster."
         MMAI_CLUSTER_LOG_DIR="$MMAI_SETUP_LOG_DIR/mmcai-cluster"
         mkdir $MMAI_CLUSTER_LOG_DIR
@@ -527,7 +542,9 @@ if $install_mmcai_manager; then
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-mmcai-manager.log"
     set_log_file $LOG_FILE
     log_good "Installing MMC.AI Manager..."
-    if ! "$HELM" install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug; then
+    if "$HELM" install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug; then
+        log_good "MMC.AI Manager installed."
+    else
         log_bad "Error installing MMC.AI Manager."
         MMAI_MANAGER_LOG_DIR="$MMAI_SETUP_LOG_DIR/mmcai-manager"
         mkdir $MMAI_MANAGER_LOG_DIR
