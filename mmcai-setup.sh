@@ -408,9 +408,23 @@ if $install_cert_manager; then
     log_good "Installing cert-manager..."
     "$HELM" repo add jetstack https://charts.jetstack.io
     "$HELM" repo update
-    "$HELM" install --wait --create-namespace -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
-      --set crds.enabled=true \
-      --debug
+    if ! "$HELM" install --wait --create-namespace -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
+        --set crds.enabled=true \
+        --debug
+    then
+        log_bad "Error installing cert-manager."
+        CERT_MANAGER_LOG_DIR="$MMAI_SETUP_LOG_DIR/cert-manager"
+        mkdir $CERT_MANAGER_LOG_DIR
+
+        CERT_MANAGER_MANIFEST="$CERT_MANAGER_LOG_DIR/manifest.yaml"
+        helm_manifest -n cert-manager cert-manager jetstack/cert-manager --version $CERT_MANAGER_VERSION \
+            --set crds.enabled=true \
+            --include-crds \
+            --debug \
+            > $CERT_MANAGER_MANIFEST
+
+        get_describe_manifest_resources $CERT_MANAGER_MANIFEST $CERT_MANAGER_LOG_DIR
+    fi
 fi
 
 if $install_kubeflow; then
@@ -440,8 +454,27 @@ if $install_nvidia_gpu_operator; then
     log_good "Installing NVIDIA GPU Operator..."
     "$HELM" repo add nvidia https://helm.ngc.nvidia.com/nvidia
     "$HELM" repo update
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/values/gpu-operator-values.yaml | \
-    "$HELM" install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION -f - --debug
+
+    NVIDIA_GPU_OPERATOR_VALUES="$TEMP_DIR/gpu-operator-values.yaml"
+    curl -LfsSo $NVIDIA_GPU_OPERATOR_VALUES https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/values/gpu-operator-values.yaml
+    if ! "$HELM" install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION \
+        -f $NVIDIA_GPU_OPERATOR_VALUES \
+        --debug
+    then
+        log_bad "Error installing NVIDIA GPU Operator."
+        NVIDIA_GPU_OPERATOR_LOG_DIR="$MMAI_SETUP_LOG_DIR/nvidia-gpu-operator"
+        mkdir $NVIDIA_GPU_OPERATOR_LOG_DIR
+
+        NVIDIA_GPU_OPERATOR_MANIFEST="$NVIDIA_GPU_OPERATOR_LOG_DIR/manifest.yaml"
+        helm_manifest -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION \
+            -f $NVIDIA_GPU_OPERATOR_VALUES \
+            --include-crds \
+            --debug \
+            > $NVIDIA_GPU_OPERATOR_MANIFEST
+
+        get_describe_manifest_resources $NVIDIA_GPU_OPERATOR_MANIFEST $NVIDIA_GPU_OPERATOR_LOG_DIR
+        false
+    fi
 fi
 
 if $install_mmcai_cluster; then
@@ -469,9 +502,24 @@ if $install_mmcai_cluster; then
             --from-literal=mysql-replication-password=$MYSQL_ROOT_PASSWORD
     fi
 
-    "$HELM" install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
+    if ! "$HELM" install -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
         --set billing.database.nodeHostname=$MYSQL_NODE_HOSTNAME \
         --debug
+    then
+        log_bad "Error installing MMC.AI Cluster."
+        MMAI_CLUSTER_LOG_DIR="$MMAI_SETUP_LOG_DIR/mmcai-cluster"
+        mkdir $MMAI_CLUSTER_LOG_DIR
+
+        MMAI_CLUSTER_MANIFEST="$MMAI_CLUSTER_LOG_DIR/manifest.yaml"
+        helm_manifest -n $RELEASE_NAMESPACE mmcai-cluster oci://ghcr.io/memverge/charts/mmcai-cluster --version $MMAI_CLUSTER_VERSION \
+            --set billing.database.nodeHostname=$MYSQL_NODE_HOSTNAME \
+            --include-crds \
+            --debug \
+            > $MMAI_CLUSTER_MANIFEST
+
+        get_describe_manifest_resources $MMAI_CLUSTER_MANIFEST $MMAI_CLUSTER_LOG_DIR
+        false
+    fi
 fi
 
 if $install_mmcai_manager; then
@@ -479,5 +527,21 @@ if $install_mmcai_manager; then
     LOG_FILE="$MMAI_SETUP_LOG_DIR/install-mmcai-manager.log"
     set_log_file $LOG_FILE
     log_good "Installing MMC.AI Manager..."
-    "$HELM" install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug
+    if ! "$HELM" install -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION --debug; then
+        log_bad "Error installing MMC.AI Manager."
+        MMAI_MANAGER_LOG_DIR="$MMAI_SETUP_LOG_DIR/mmcai-manager"
+        mkdir $MMAI_MANAGER_LOG_DIR
+
+        MMAI_MANAGER_MANIFEST="$MMAI_MANAGER_LOG_DIR/manifest.yaml"
+        helm_manifest -n $RELEASE_NAMESPACE mmcai-manager oci://ghcr.io/memverge/charts/mmcai-manager --version $MMAI_MANAGER_VERSION \
+            --include-crds \
+            --debug \
+            > $MMAI_MANAGER_MANIFEST
+
+        get_describe_manifest_resources $MMAI_MANAGER_MANIFEST $MMAI_MANAGER_LOG_DIR
+        false
+    fi
 fi
+
+div
+log_good "Done!"
