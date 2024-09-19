@@ -129,3 +129,23 @@ get_describe_manifest_resources() {
     "$KUBECTL" describe -f "$manifest" > "$output_dir/describe.txt" &
     wait
 }
+
+logs_describe_pods_in_namespace() {
+    if (( $# == 2 )) \
+    && [[ -n "$1" ]] \
+    && [[ -n "$2" ]] && [[ -d "$2" ]]
+    then
+        local namespace=$1
+        local output_dir=$2
+    else
+        return 1
+    fi
+
+    local pods=$("$KUBECTL" get pods -n $namespace -o custom-columns=:.metadata.name)
+    for pod in $pods; do
+        "$KUBECTL" logs -n $namespace $pod --all-containers --prefix --timestamps > "$output_dir/${namespace}_${pod}.log" &
+    done
+
+    "$KUBECTL" describe pods -n $namespace > "$output_dir/describe_${namespace}_pods.txt"
+    wait
+}

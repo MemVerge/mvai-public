@@ -147,7 +147,7 @@ fi
 
 # Determine if mmcai-cluster is installed.
 mmcai_cluster_detected() {
-    "$HELM" list -n mmcai-system -a -q | grep mmcai-cluster
+    "$HELM" list -n $RELEASE_NAMESPACE -a -q | grep mmcai-cluster
 }
 if ! mmcai_cluster_detected; then
     log "MMC.AI Cluster not detected."
@@ -155,7 +155,7 @@ fi
 
 # Determine if mmcai-manager is installed.
 mmcai_manager_detected() {
-    "$HELM" list -n mmcai-system -a -q | grep mmcai-manager
+    "$HELM" list -n $RELEASE_NAMESPACE -a -q | grep mmcai-manager
 }
 if ! mmcai_manager_detected; then
     log "MMC.AI Manager not detected."
@@ -425,6 +425,7 @@ if $install_cert_manager; then
             --debug \
             > $CERT_MANAGER_MANIFEST
 
+        logs_describe_pods_in_namespace cert-manager "$CERT_MANAGER_LOG_DIR/pods"
         get_describe_manifest_resources $CERT_MANAGER_MANIFEST $CERT_MANAGER_LOG_DIR
     fi
 fi
@@ -485,6 +486,7 @@ if $install_nvidia_gpu_operator; then
             --debug \
             > $NVIDIA_GPU_OPERATOR_MANIFEST
 
+        logs_describe_pods_in_namespace gpu-operator "$NVIDIA_GPU_OPERATOR_LOG_DIR/pods"
         get_describe_manifest_resources $NVIDIA_GPU_OPERATOR_MANIFEST $NVIDIA_GPU_OPERATOR_LOG_DIR
         false
     fi
@@ -532,6 +534,9 @@ if $install_mmcai_cluster; then
             --debug \
             > $MMAI_CLUSTER_MANIFEST
 
+        logs_describe_pods_in_namespace $RELEASE_NAMESPACE "$MMAI_CLUSTER_LOG_DIR/pods"
+        logs_describe_pods_in_namespace $MMCLOUD_OPERATOR_NAMESPACE "$MMAI_CLUSTER_LOG_DIR/pods"
+        logs_describe_pods_in_namespace $PROMETHEUS_NAMESPACE "$MMAI_CLUSTER_LOG_DIR/pods"
         get_describe_manifest_resources $MMAI_CLUSTER_MANIFEST $MMAI_CLUSTER_LOG_DIR
         false
     fi
@@ -555,6 +560,7 @@ if $install_mmcai_manager; then
             --debug \
             > $MMAI_MANAGER_MANIFEST
 
+        logs_describe_pods_in_namespace $RELEASE_NAMESPACE "$MMAI_MANAGER_LOG_DIR/pods"
         get_describe_manifest_resources $MMAI_MANAGER_MANIFEST $MMAI_MANAGER_LOG_DIR
         false
     fi
