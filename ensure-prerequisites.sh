@@ -3,12 +3,12 @@
 set -euo pipefail
 
 imports='
-    logging.sh
-    venv.sh
+    util/logging.sh
+    util/venv.sh
 '
 for import in $imports; do
-    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/util/$import; then
-        echo "Error getting script dependency: $import"
+    if ! [[ -f "$import" ]]; then
+        echo "Script dependency $import not found."
         exit 1
     fi
     source $import

@@ -26,8 +26,8 @@ YQ="$BIN_DIR/yq"
 
 ensure_prerequisites() {
     local script='ensure-prerequisites.sh'
-    if ! curl -LfsSo $script https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/$script; then
-        echo "Error getting script: $script"
+    if ! [[ -f "$script" ]]; then
+        echo "Script $script not found."
         return 1
     fi
     chmod +x $script
@@ -103,8 +103,10 @@ helm_manifest() {
             -n | --namespace )
                 local release_namespace="$2"
                 shift 2
+                ;;
             * )
                 shift
+                ;;
         esac
     done
 

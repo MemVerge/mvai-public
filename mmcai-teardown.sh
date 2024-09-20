@@ -7,7 +7,7 @@ ignore_errors=false
 while getopts "i" option; do
     case $option in
         i ) ignore_errors=true;;
-        * ) echo "Invalid option. Use -i to ignore errors."
+        * ) echo "Invalid option. Use -i to ignore errors.";;
     esac
 done
 
@@ -16,13 +16,13 @@ if ! $ignore_errors; then
 fi
 
 imports='
-    common.sh
-    logging.sh
-    venv.sh
+    util/common.sh
+    util/logging.sh
+    util/venv.sh
 '
 for import in $imports; do
-    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/util/$import; then
-        echo "Error getting script dependency: $import"
+    if ! [[ -f "$import" ]]; then
+        echo "Script dependency $import not found."
         exit 1
     fi
     source $import
@@ -385,8 +385,7 @@ if $remove_billing_database; then
     set_log_file $LOG_FILE
     log_good "Removing billing database..."
 
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/mysql-teardown-playbook.yaml | \
-    ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
+    ansible-playbook -i $ANSIBLE_INVENTORY playbooks/mysql-teardown-playbook.yaml
 
     "$KUBECTL" delete secret -n $RELEASE_NAMESPACE mmai-mysql-secret --ignore-not-found
 fi

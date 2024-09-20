@@ -2,9 +2,7 @@
 
 set -euo pipefail
 
-curl -LfsSo logging.sh https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/util/logging.sh
-
-source logging.sh
+source util/logging.sh
 
 ## welcome message
 

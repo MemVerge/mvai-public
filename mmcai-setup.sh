@@ -7,7 +7,7 @@ ignore_errors=false
 while getopts "i" option; do
     case $option in
         i ) ignore_errors=true;;
-        * ) echo "Invalid option. Use -i to ignore errors."
+        * ) echo "Invalid option. Use -i to ignore errors.";;
     esac
 done
 
@@ -16,13 +16,13 @@ if ! $ignore_errors; then
 fi
 
 imports='
-    common.sh
-    logging.sh
-    venv.sh
+    util/common.sh
+    util/logging.sh
+    util/venv.sh
 '
 for import in $imports; do
-    if ! curl -LfsSo $import https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/util/$import; then
-        echo "Error getting script dependency: $import"
+    if ! [[ -f "$import" ]]; then
+        echo "Script dependency $import not found."
         exit 1
     fi
     source $import
@@ -436,8 +436,7 @@ if $install_kubeflow; then
     set_log_file $LOG_FILE
     log_good "Installing Kubeflow..."
 
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/sysctl-playbook.yaml | \
-    ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
+    ansible-playbook -i $ANSIBLE_INVENTORY playbooks/sysctl-playbook.yaml
 
     build_kubeflow $TEMP_DIR
 
@@ -467,8 +466,7 @@ if $install_nvidia_gpu_operator; then
     "$HELM" repo add nvidia https://helm.ngc.nvidia.com/nvidia
     "$HELM" repo update
 
-    NVIDIA_GPU_OPERATOR_VALUES="$TEMP_DIR/gpu-operator-values.yaml"
-    curl -LfsSo $NVIDIA_GPU_OPERATOR_VALUES https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/values/gpu-operator-values.yaml
+    NVIDIA_GPU_OPERATOR_VALUES="values/gpu-operator-values.yaml"
     if "$HELM" install --wait --create-namespace -n gpu-operator nvidia-gpu-operator nvidia/gpu-operator --version $NVIDIA_GPU_OPERATOR_VERSION \
         -f $NVIDIA_GPU_OPERATOR_VALUES \
         --debug
@@ -498,8 +496,7 @@ if $install_mmcai_cluster; then
     set_log_file $LOG_FILE
     log_good "Installing MMC.AI Cluster..."
 
-    curl -LfsS https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/playbooks/mysql-setup-playbook.yaml | \
-    ansible-playbook -i $ANSIBLE_INVENTORY /dev/stdin
+    ansible-playbook -i $ANSIBLE_INVENTORY playbooks/mysql-setup-playbook.yaml
 
     # Create namespaces
     "$KUBECTL" get namespace $RELEASE_NAMESPACE &>/dev/null || "$KUBECTL" create namespace $RELEASE_NAMESPACE

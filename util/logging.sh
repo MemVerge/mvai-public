@@ -1,8 +1,8 @@
 #!/bin/bash
 
-PREPEND_TIMESTAMP_PY='prepend-timestamp.py'
-if ! curl -LfsSo $PREPEND_TIMESTAMP_PY https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/unified-setup/util/$PREPEND_TIMESTAMP_PY; then
-    echo "Error getting script dependency: $PREPEND_TIMESTAMP_PY"
+PREPEND_TIMESTAMP_PY='util/prepend-timestamp.py'
+if ! [[ -f "$PREPEND_TIMESTAMP_PY" ]]; then
+    echo "Script dependency $PREPEND_TIMESTAMP_PY not found."
     exit 1
 fi
 
