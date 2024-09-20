@@ -73,8 +73,8 @@ Within, there are four relevant host groups:
 
 Once Ansible configuration is complete, copy these commands into your terminal to install Kubernetes:
 ```bash
-curl -LfO https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/deepops-setup.sh
-chmod +x deepops-setup.sh
+git clone https://github.com/MemVerge/mmc.ai-setup
+cd mmc.ai-setup
 ./deepops-setup.sh
 ```
 
@@ -148,8 +148,8 @@ Download and run the interactive `mmcai-setup.sh` script on the control plane no
 You will have a chance to confirm your changes after making your selections:
 
 ```bash
-curl -LfO https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-setup.sh
-chmod +x mmcai-setup.sh
+git clone https://github.com/MemVerge/mmc.ai-setup
+cd mmc.ai-setup
 ./mmcai-setup.sh
 ```
 
@@ -190,7 +190,7 @@ If you have nothing else installed in the cluster and want to remove everything,
 
 You will have a chance to confirm your changes after making your selections:
 ```bash
-curl -LfO https://raw.githubusercontent.com/MemVerge/mmc.ai-setup/main/mmcai-teardown.sh
-chmod +x mmcai-teardown.sh
+git clone https://github.com/MemVerge/mmc.ai-setup
+cd mmc.ai-setup
 ./mmcai-teardown.sh
 ```
