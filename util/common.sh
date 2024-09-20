@@ -71,7 +71,7 @@ input_default_yn() {
 }
 
 build_kubeflow() {
-    if (( $# == 1 )) && [[ "$1" != "" ]] && [[ -d "$1" ]]; then
+    if (( $# == 1 )) && [[ -n "$1" ]] && [[ -d "$1" ]]; then
         # Use the specified log file.
         local base_dir=$1
     else
@@ -92,4 +92,60 @@ build_kubeflow() {
     sed -i 's:TWA_APP_SECURE_COOKIES=true:TWA_APP_SECURE_COOKIES=false:' "$base_dir/kubeflow/apps/tensorboard/tensorboards-web-app/upstream/base/params.env"
 
     "$KUSTOMIZE" build $base_dir/kubeflow/example > $base_dir/$KUBEFLOW_MANIFEST
+}
+
+# We can't use `helm template` because of this issue:
+# https://github.com/helm/helm/issues/3553
+helm_manifest() {
+    local arguments="$@"
+    while (( $# > 0 )); do
+        case "$1" in
+            -n | --namespace )
+                local release_namespace="$2"
+                shift 2
+            * )
+                shift
+        esac
+    done
+
+    "$HELM" template "$arguments" --include-crds \
+        | "$KUBECTL" apply -n $release_namespace --dry-run=client --output=yaml -f - \
+        | "$YQ" '.items[] | split_doc'
+}
+
+get_describe_manifest_resources() {
+    if (( $# == 2 )) \
+    && [[ -n "$1" ]] && [[ -f "$1" ]] \
+    && [[ -n "$2" ]] && [[ -d "$2" ]]
+    then
+        local manifest=$1
+        local output_dir=$2
+    else
+        return 1
+    fi
+
+    "$KUBECTL" get -f "$manifest" > "$output_dir/get.txt" &
+    "$KUBECTL" get -f "$manifest" -o yaml > "$output_dir/get.yaml" &
+    "$KUBECTL" describe -f "$manifest" > "$output_dir/describe.txt" &
+    wait
+}
+
+logs_describe_pods_in_namespace() {
+    if (( $# == 2 )) \
+    && [[ -n "$1" ]] \
+    && [[ -n "$2" ]] && [[ -d "$2" ]]
+    then
+        local namespace=$1
+        local output_dir=$2
+    else
+        return 1
+    fi
+
+    local pods=$("$KUBECTL" get pods -n $namespace -o custom-columns=:.metadata.name)
+    for pod in $pods; do
+        "$KUBECTL" logs -n $namespace $pod --all-containers --prefix --timestamps > "$output_dir/${namespace}_${pod}.log" &
+    done
+
+    "$KUBECTL" describe pods -n $namespace > "$output_dir/describe_${namespace}_pods.txt"
+    wait
 }

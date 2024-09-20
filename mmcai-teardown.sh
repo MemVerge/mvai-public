@@ -76,14 +76,14 @@ else
 fi
 
 # Determine if mmcai-cluster and mmcai-manager are installed.
-if "$HELM" list -n mmcai-system -a -q | grep mmcai-cluster; then
+if "$HELM" list -n $RELEASE_NAMESPACE -a -q | grep mmcai-cluster; then
     mmcai_cluster_detected=true
 else
     mmcai_cluster_detected=false
     log "MMC.AI Cluster not detected."
 fi
 
-if "$HELM" list -n mmcai-system -a -q | grep mmcai-manager; then
+if "$HELM" list -n $RELEASE_NAMESPACE -a -q | grep mmcai-manager; then
     mmcai_manager_detected=true
 else
     mmcai_manager_detected=false
@@ -476,17 +476,22 @@ if $remove_kubeflow; then
 
     build_kubeflow $TEMP_DIR
 
-    attempts=5
+    attempts=10
     log "Deleting all Kubeflow resources..."
     log "Attempts remaining: $((attempts))"
-    while (( attempts > 0 )) && ! delete_kubeflow; do
+    while (( attempts > 1 )) && ! delete_kubeflow; do
         attempts=$((attempts - 1))
         log "Kubeflow removal incomplete."
         log "Attempts remaining: $((attempts))"
         log "Waiting 15 seconds before attempt..."
         sleep 15
     done
-    log "Kubeflow removed."
+    if (( attempts > 1 )) || delete_kubeflow; then
+        log_good "Kubeflow removed."
+    else
+        log_bad "Error removing Kubeflow."
+        false
+    fi
 fi
 
 div
