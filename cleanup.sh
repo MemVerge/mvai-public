@@ -400,7 +400,7 @@ kubectl get "$(kubectl api-resources --namespaced=true --verbs=delete -o name| g
 done
 
 # MMAI
-kubectl get "$(kubectl api-resources --namespaced=true --verbs=delete -o name| grep -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e hami\.io | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,KIND:.kind,APIVERSION:.apiVersion | while read -r NAME NAMESPACE KIND APIVERSION; do
+kubectl get "$(kubectl api-resources --namespaced=true --verbs=delete -o name| grep -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e nfd\.k8s-sigs\.io -e hami\.io | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,KIND:.kind,APIVERSION:.apiVersion | while read -r NAME NAMESPACE KIND APIVERSION; do
   kcpf -n "$NAMESPACE" "${KIND}.$(printapiversion "$APIVERSION")" "$NAME"
   kcd "-n ""$NAMESPACE"" ${KIND}.$(printapiversion "$APIVERSION") ""$NAME"""
 done
@@ -425,7 +425,7 @@ kubectl get "$(kubectl api-resources --namespaced=false --verbs=delete -o name| 
 done
 
 # MMAI
-kubectl get "$(kubectl api-resources --namespaced=false --verbs=delete -o name| grep  -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e hami\.io | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o name | while read -r NAME; do
+kubectl get "$(kubectl api-resources --namespaced=false --verbs=delete -o name| grep  -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e nfd\.k8s-sigs\.io -e hami\.io | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o name | while read -r NAME; do
   kcpf "$NAME"
   kcd "$NAME"
 done
@@ -522,6 +522,6 @@ for CRD in $(kubectl get crd -o name | grep cattle\.io | grep -v helm\.cattle\.i
 done
 
 # Delete all MMAI CRDs
-for CRD in $(kubectl get crd -o name | grep -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e hami\.io); do
+for CRD in $(kubectl get crd -o name | grep -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e nfd\.k8s-sigs\.io -e hami\.io); do
   kcd "$CRD"
 done
