@@ -143,9 +143,9 @@ CATTLE_NAMESPACES="local cattle-system cattle-impersonation-system cattle-global
 TOOLS_NAMESPACES="istio-system cattle-resources-system cis-operator-system cattle-dashboards cattle-gatekeeper-system cattle-alerting cattle-logging cattle-pipeline cattle-prometheus rancher-operator-system cattle-monitoring-system cattle-logging-system cattle-elemental-system"
 FLEET_NAMESPACES="cattle-fleet-clusters-system cattle-fleet-local-system cattle-fleet-system fleet-default fleet-local fleet-system"
 
-# Delete rancher install to not have anything running that (re)creates resources
+# Delete MMAI install to not have anything running that (re)creates resources
 kcd "-n cattle-system deploy,ds --all"
-kubectl -n cattle-system wait --for delete pod --selector=app=rancher
+kubectl -n cattle-system wait --for delete pod --selector=app=mmai
 # Delete the only resource not in cattle namespaces
 kcd "-n kube-system configmap cattle-controllers"
 
@@ -184,6 +184,14 @@ fi
 if [ -n "$(kubectl get mutatingwebhookconfiguration.admissionregistration.k8s.io/mutating-webhook-configuration)" ]; then
     kcd mutatingwebhookconfiguration.admissionregistration.k8s.io/mutating-webhook-configuration
 fi
+
+# Delete any MMAI webhooks
+kubectl get mutatingwebhookconfigurations -o name | grep -e mmai -e kueue -e mmcloud -e nvidia -e hami | while read -r WH; do
+  kcd "$WH"
+done
+kubectl get validatingwebhookconfigurations -o name | grep -e mmai -e kueue -e mmcloud -e nvidia -e hami | while read -r WH; do
+  kcd "$WH"
+done
 
 # Delete generic k8s resources either labeled with norman or resource name starting with "cattle|rancher|fleet"
 # ClusterRole/ClusterRoleBinding
@@ -233,6 +241,11 @@ kubectl get clusterrolebinding --no-headers -o custom-columns=NAME:.metadata.nam
 done
 
 kubectl get clusterrolebinding --no-headers -o custom-columns=NAME:.metadata.name | grep ^elemental | while read -r CRB; do
+  kcpf clusterrolebindings "$CRB"
+  kcd "clusterrolebindings ""$CRB"""
+done
+
+kubectl get clusterrolebinding --no-headers -o custom-columns=NAME:.metadata.name | grep -e ^mmai -e ^kueue -e ^mmcloud -e ^gpu-operator -e ^hami | while read -r CRB; do
   kcpf clusterrolebindings "$CRB"
   kcd "clusterrolebindings ""$CRB"""
 done
@@ -293,6 +306,11 @@ kubectl get clusterroles --no-headers -o custom-columns=NAME:.metadata.name | gr
 done
 
 kubectl get clusterroles --no-headers -o custom-columns=NAME:.metadata.name | grep ^elemental | while read -r CR; do
+  kcpf clusterroles "$CR"
+  kcd "clusterroles ""$CR"""
+done
+
+kubectl get clusterroles --no-headers -o custom-columns=NAME:.metadata.name | grep -e ^mmai -e ^kueue -e ^mmcloud -e ^gpu-operator -e ^hami | while read -r CR; do
   kcpf clusterroles "$CR"
   kcd "clusterroles ""$CR"""
 done
@@ -381,6 +399,13 @@ kubectl get "$(kubectl api-resources --namespaced=true --verbs=delete -o name| g
   kcd "-n ""$NAMESPACE"" ${KIND}.$(printapiversion "$APIVERSION") ""$NAME"""
 done
 
+# MMAI
+kubectl get "$(kubectl api-resources --namespaced=true --verbs=delete -o name| grep -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e hami\.io | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o custom-columns=NAME:.metadata.name,NAMESPACE:.metadata.namespace,KIND:.kind,APIVERSION:.apiVersion | while read -r NAME NAMESPACE KIND APIVERSION; do
+  kcpf -n "$NAMESPACE" "${KIND}.$(printapiversion "$APIVERSION")" "$NAME"
+  kcd "-n ""$NAMESPACE"" ${KIND}.$(printapiversion "$APIVERSION") ""$NAME"""
+done
+
+
 # Get all non-namespaced resources and delete in loop
 kubectl get "$(kubectl api-resources --namespaced=false --verbs=delete -o name| grep cattle\.io | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o name | while read -r NAME; do
   kcpf "$NAME"
@@ -395,6 +420,12 @@ done
 
 # Gatekeeper
 kubectl get "$(kubectl api-resources --namespaced=false --verbs=delete -o name| grep gatekeeper\.sh | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o name | while read -r NAME; do
+  kcpf "$NAME"
+  kcd "$NAME"
+done
+
+# MMAI
+kubectl get "$(kubectl api-resources --namespaced=false --verbs=delete -o name| grep  -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e hami\.io | tr "\n" "," | sed -e 's/,$//')" -A --no-headers -o name | while read -r NAME; do
   kcpf "$NAME"
   kcd "$NAME"
 done
@@ -490,7 +521,7 @@ for CRD in $(kubectl get crd -o name | grep cattle\.io | grep -v helm\.cattle\.i
   kcd "$CRD"
 done
 
-# Delete all mmai CRDs
-for CRD in $(kubectl get crd -o name | grep -e mmai -e kueue -e nvidia -e mmcloud); do
+# Delete all MMAI CRDs
+for CRD in $(kubectl get crd -o name | grep -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e hami\.io); do
   kcd "$CRD"
 done
