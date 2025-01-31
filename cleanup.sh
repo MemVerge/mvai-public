@@ -34,7 +34,26 @@ initialize_log() {
     log_stdout_stderr $logpath
 }
 
-initialize_log
+force_initialize_log() {
+    local new_log_file=""
+    if [[ -f "$STDOUT_LOG_FILE" ]]; then
+        # Find all files with the pattern $STDOUT_LOG_FILE.[NUMBER]
+        max_number=$(ls "$STDOUT_LOG_FILE".* 2>/dev/null | grep -Eo "${STDOUT_LOG_FILE}\.[0-9]+$" | sort -n | tail -1)
+
+        if [[ -z "$max_number" ]]; then
+            # If no numbered files exist, start with 2
+            new_log_file="${STDOUT_LOG_FILE}.2"
+        else
+            # Increment the highest number by 1
+            new_log_file="${STDOUT_LOG_FILE}.$((max_number + 1))"
+        fi
+    else
+        # If the default log file doesn't exist, use it
+        new_log_file="$STDOUT_LOG_FILE"
+    fi
+
+    log_stdout_stderr "$new_log_file"
+}
 
 # Warning
 echo "==================== WARNING ===================="
@@ -42,6 +61,24 @@ echo "THIS WILL DELETE ALL RESOURCES CREATED BY MMAI"
 echo "MAKE SURE YOU HAVE CREATED AND TESTED YOUR BACKUPS"
 echo "THIS IS A NON REVERSIBLE ACTION"
 echo "==================== WARNING ===================="
+
+case $1 in
+  "force" )
+    echo "'force' flag provided. Continuing..."
+    force_initialize_log
+    ;;
+
+  * )
+    echo "Do you want to continue (y/n)?"
+    read -r answer
+    if [ "$answer" != "y" ]; then
+      echo "Exiting..."
+      exit 1
+    else
+        initialize_log
+    fi
+    ;;
+esac
 
 # Linux only for now
 if [ "$(uname -s)" != "Linux" ]; then
@@ -71,21 +108,6 @@ fi
 echo "=> Printing cluster info for confirmation"
 kubectl cluster-info
 kubectl get nodes -o wide
-
-case $1 in
-  "force" )
-    echo "'force' flag provided. Continuing..."
-    ;;
-
-  * )
-    echo "Do you want to continue (y/n)?"
-    read -r answer
-    if [ "$answer" != "y" ]; then
-      echo "Exiting..."
-      exit 1
-    fi
-    ;;
-esac
 
 kcd()
 {
