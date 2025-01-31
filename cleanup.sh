@@ -4,9 +4,10 @@
 # arg1 = path to log file. If empty, save to current directory
 TEE=("$(command -v tee)")               # Path to tee
 TAIL=("$(command -v tail)")             # Path to tail
+DATE=$(date +"%d_%b_%Y_%T")
 SCRIPT_NAME=${0##*/}                    # Name of this script
 SCRIPT_NAME=${SCRIPT_NAME%.*}           # Name of this without extension
-STDOUT_LOG_FILE="${SCRIPT_NAME}.log"    # Filename to save STDOUT and STDERR
+STDOUT_LOG_FILE="${SCRIPT_NAME}_${DATE}.log"    # Filename to save STDOUT and STDERR
 log_stdout_stderr() {
     local LOG_PATH
     if [[ $1 != "" ]]; then
@@ -75,7 +76,7 @@ case $1 in
       echo "Exiting..."
       exit 1
     else
-        initialize_log
+      initialize_log
     fi
     ;;
 esac
