@@ -525,3 +525,10 @@ done
 for CRD in $(kubectl get crd -o name | grep -e mmai\.io -e kueue\.x-k8s\.io -e mmcloud\.io -e nvidia\.com -e nfd\.k8s-sigs\.io -e hami\.io); do
   kcd "$CRD"
 done
+
+# Remove MMAI labels from nodes
+for node in $(kubectl get nodes -o name); do
+  if kubectl get "$node" -o jsonpath="{.metadata.labels}" | grep -q mmai\.io; then
+    kubectl label "$node" mmai.io/nodegroup- mmai.io/fractional-gpu- node.kubernetes.io/unschedulable-
+  fi
+done
