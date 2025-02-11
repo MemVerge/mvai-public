@@ -113,6 +113,38 @@ helm install --namespace cattle-system mmai oci://ghcr.io/memverge/charts/mmai \
 Now that MMAI is deployed, see [Adding TLS Secrets](add-tls-secrets.md) to publish your certificate files so MMAI and the Ingress controller can use them.
 </details>
 
+## Billing Database Installation
+Billing features require persistent storage. By default, the cluster's default `StorageClass` is used. If the cluster doesn't have a default storage class capable of provisioning a volume for billing, there are a few alternative ways to configure persistent storage.  
+
+**Note:** Using an NFS volume for billing persistent storage is discouraged, as most NFS configurations will be incompatible.  
+
+### Configuring Billing to Use a Non-Default StorageClass
+If the cluster has an alternative `StorageClass` suitable for the billing database, you can override the default `StorageClass` by adding the following flag to the `helm install mmai` command:  
+
+```sh
+--set billing.database.volume.pvc.storageClass=[StorageClass name]  
+```
+
+### Configuring the Installation to Use a Predefined PVC  
+If the cluster administrator wants to manually define a PVC for the billing database, disable automatic PVC creation by setting the `StorageClass` to an empty string:  
+
+```sh
+--set billing.database.volume.pvc.storageClass=""  
+```
+
+### Configuring the Installation to Use a HostPath Mount  
+The billing database can be configured to use `hostPath` storage, which directly creates and mounts a directory on the host node to the billing database pod. To enable `hostPath` storage, add the following flag to the `helm install mmai` command:  
+
+```sh
+--set billing.database.volume.type="hostPath"  
+```
+
+By default, the directory `/data/memverge/mmai/mysql-billing` is used. This path can be overridden with the following flag:  
+
+```sh
+--set billing.database.volume.hostPath.path="/desired/path/here"  
+```
+
 ## Uninstall MMAI
 
 This command deletes the MMAI deployment, but leaves MMAI CRDs and user-created MMAI CRs in the cluster.
