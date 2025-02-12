@@ -116,7 +116,7 @@ Now that MMAI is deployed, see [Adding TLS Secrets](add-tls-secrets.md) to publi
 ## Billing Database Installation
 Billing features require persistent storage. By default, the cluster's default `StorageClass` is used. If the cluster doesn't have a default storage class capable of provisioning a volume for billing, there are a few alternative ways to configure persistent storage.  
 
-**Note:** Using an NFS volume for billing persistent storage is discouraged, as most NFS configurations will be incompatible.  
+**Note:** NFS should be used with caution. `root-squash` is incompatible, and other configurations may cause issues, such as mount options or NFS version constraints. See the [MySQL documentation](https://dev.mysql.com/doc/refman/8.4/en/disk-issues.html#disk-issues-nfs) for details.
 
 ### Configuring Billing to Use a Non-Default StorageClass
 If the cluster has an alternative `StorageClass` suitable for the billing database, you can override the default `StorageClass` by adding the following flag to the `helm install mmai` command:  
