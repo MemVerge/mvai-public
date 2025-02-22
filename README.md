@@ -75,7 +75,7 @@ helm install --namespace cattle-system mmai oci://ghcr.io/memverge/charts/mmai \
   - If there is only one control-plane node and there is no load balancer, the `hostname` can be the DNS name of the control-plane node.
   - If this single control-plane node has no DNS name, a fake domain name `<IP_OF_NODE>.sslip.io` can be used.
 - Set the `bootstrapPassword` to something unique for the admin user.
-- To install the latest development version, replace the `--version <version>` option with `--devel` in the install command.
+- Note that the `version` should not include prefix `v`. To install the latest development version, replace the `--version <version>` option with `--devel` in the install command.
 
 ### 2. Let's Encrypt
 
