@@ -2,12 +2,12 @@
 
 ## Prerequisites
 
-- Access to a Kubernetes v1.28+ cluster with `cluster-admin` role. Supported distributions are:
+- Access to a Kubernetes v1.30+ cluster with `cluster-admin` role. Supported distributions are:
     - Vanilla Kubernetes
     - K3s
 - CRI runtime support (https://kubernetes.io/docs/setup/production-environment/container-runtimes/):
   - `Containerd`: v1.7+.
-  - `CRI-O`: v1.28+.
+  - `CRI-O`: v1.30+.
   - Others are not supported.
 - Ingress Controller is set up in the cluster. There are many choices. See https://kubernetes.io/docs/concepts/services-networking/ingress-controllers/.
 - A default storage class is set up in the cluster to dynamically create persistent volume claims.
@@ -17,7 +17,7 @@
   - `HAMi`
   - `Prometheus Operator` and its derivatives, such as `kube-state-metrics`
   - `Rancher`
-- `kubectl` version v1.28+.
+- `kubectl` version v1.30+.
 - `Helm` version v3.14+.
 - Download the `mvai` package from the [releases page](https://github.com/MemVerge/mvai-public/releases) that includes:
   - Binary `mvaictl` to manage MemVerge.ai product from cmdline.
