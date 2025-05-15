@@ -68,7 +68,7 @@ The default is for MemVerge.ai to generate a CA and uses `cert-manager` to issue
 
 ```sh
 helm install --namespace cattle-system mvai oci://ghcr.io/memverge/charts/mvai \
-  --wait --timeout 20m --version <version> \
+  --wait --timeout 30m --version <version> \
   --set hostname=<load-balancer-hostname> --set bootstrapPassword=admin
 ```
 - Set the `hostname` to the DNS name of the load balancer.
@@ -84,7 +84,7 @@ This option uses `cert-manager` to automatically request and renew `Let's Encryp
 
 ```sh
 helm install --namespace cattle-system mvai oci://ghcr.io/memverge/charts/mvai \
-  --wait --timeout 20m --version <version> \
+  --wait --timeout 30m --version <version> \
   --set hostname=<load-balancer-hostname> --set bootstrapPassword=admin \
   --set ingress.tls.source=letsEncrypt --set letsEncrypt.email=<me@example.org> \
   --set letsEncrypt.ingress.class=<ingress-controller-name>
@@ -100,7 +100,7 @@ When you run this command, the hostname option must match the Common Name or a S
 
 ```sh
 helm install --namespace cattle-system mvai oci://ghcr.io/memverge/charts/mvai \
-  --wait --timeout 20m --version <version> \
+  --wait --timeout 30m --version <version> \
   --set hostname=<load-balancer-hostname> --set bootstrapPassword=admin \
   --set ingress.tls.source=secret
 ```
@@ -109,7 +109,7 @@ If you are using a Private CA signed certificate , add `--set privateCA=true` to
 
 ```sh
 helm install --namespace cattle-system mvai oci://ghcr.io/memverge/charts/mvai \
-  --wait --timeout 20m --version <version> \
+  --wait --timeout 30m --version <version> \
   --set hostname=<load-balancer-hostname> --set bootstrapPassword=admin \
   --set ingress.tls.source=secret --set privateCA=true
 ```
@@ -153,7 +153,7 @@ By default, the directory `/data/memverge/mvai/mysql-billing` is used. This path
 This command deletes the MemVerge.ai deployment, but leaves MemVerge.ai CRDs and user-created MemVerge.ai CRs in the cluster.
 
 ```sh
-helm uninstall --namespace cattle-system mvai
+helm uninstall --namespace cattle-system mvai --wait --timeout 10m
 ```
 
 To completely cleanup MemVerge.ai resources, run the `mvai-cleanup.sh` script from the released `mvai` package.
